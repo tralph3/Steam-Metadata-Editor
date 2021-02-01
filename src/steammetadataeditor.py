@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from hashlib import sha1
 import tkinter as tk
 from tkinter.ttk import Treeview, Style
@@ -45,7 +46,7 @@ STEAM_PATH = None
 
 class MainWindow():
 
-    def __init__(self):
+    def __init__(self, silent):
 
         self.modifiedApps = []
 
@@ -334,7 +335,7 @@ class MainWindow():
                 data[section] = {}
                 data = data[section]
 
-        data[sections[-1]] = value
+            data[sections[-1]] = value
 
     def get_unix_time(self, year, month, day):
         return int(datetime(year, month, day).timestamp())
@@ -1033,15 +1034,20 @@ class VDF():
         self.parsedAppInfo = self.read_all_apps()
 
     ### READ DATA ###
-    def read_string(self):
-        stringEnd = self.appinfoData.find(self.INT_SEPARATOR, self.offset)
-        string = self.appinfoData[self.offset:stringEnd].decode()
-        self.offset += stringEnd - self.offset + 1
+    def read_string(self, key=False):
+        strEnd = self.appinfoData.find(self.INT_SEPARATOR, self.offset)
+        try:
+            string = self.appinfoData[self.offset:strEnd].decode('utf-8')
+        except:
+            # latin-1 == iso8859-1
+            string = self.appinfoData[self.offset:strEnd].decode('latin-1')
+            # control character used to determine encoding
+            string += '\x06'
+        self.offset += strEnd - self.offset + 1
         return string
 
     def read_int32(self):
-        int32 = unpack("<I",
-            self.appinfoData[self.offset:self.offset + 4])[0]
+        int32 = unpack("<I", self.appinfoData[self.offset:self.offset + 4])[0]
         # move offset past data
         self.offset += 4
         return int32
@@ -1064,7 +1070,7 @@ class VDF():
             if value_type == self.INT_SECTION_END:
                 break
 
-            key = self.read_string()
+            key = self.read_string(key=True)
             value = value_parsers[value_type]()
 
             subsection[key] = value
@@ -1126,7 +1132,10 @@ class VDF():
             data['checksum'], data['change_number'])
 
     def encode_string(self, string):
-        return string.encode() + self.SEPARATOR
+        if '\x06' in string:
+            return string[:-1].encode('latin-1') + self.SEPARATOR
+        else:
+            return string.encode() + self.SEPARATOR
 
     def encode_int(self, integer):
         return pack("<I", integer)
@@ -1152,10 +1161,9 @@ class VDF():
 
     def get_checksum(self, data):
         formatted_data = self.format_data(data)
-        hsh = sha1(formatted_data.encode())
+        hsh = sha1(formatted_data)
 
-        return bytes.fromhex(hsh.hexdigest())
-
+        return hsh.digest()
 
     def update_size_and_checksum(self, header, size, checksum):
         header = bytearray(header)
@@ -1165,7 +1173,6 @@ class VDF():
         header[24:44] = pack("<20s", checksum)
 
         return header
-
 
     def update_app(self, appinfo):
 
@@ -1193,40 +1200,39 @@ class VDF():
         with open(vdfPath, 'wb') as vdf:
             vdf.write(self.appinfoData)
 
-
     def format_data(self, data, numberOfTabs=0):
 
         '''
-        Formats a python dictionary into a vdf.
-        The output of this function looks like this:
-
-        "dictionary"\n
-        {
-        \t"Key"\t\t"value"\n
-        \t"key2"\t\t"value2\n
-        \t"dictionary2"\n
-        \t{
-        \t\t"key"\t\t"value"\n
-        \t}
-        }\n
+        Formats a python dictionary into the vdf text format.
         '''
 
-        formatted_data = ''
+        formatted_data = b''
         # set a string with a fixed number of tabs for this instance
-        tabs = "\t" * numberOfTabs
+        tabs = b"\t" * numberOfTabs
 
+        # re-encode strings with their original encoding
         for key in data.keys():
             if type(data[key]) == dict:
                 numberOfTabs += 1
 
-                formatted_data += tabs + "\"" + key + "\"" +\
-                    "\n" + tabs + str(data[key])[0] + "\n" +\
-                    self.format_data(data[key], numberOfTabs) + tabs + "}\n"
+                formatted_data += tabs + b"\"" + key.replace("\\", "\\\\")\
+                    .encode() + b"\"" + b"\n" + tabs + b'{' + b"\n" +\
+                    self.format_data(data[key], numberOfTabs) + tabs + b"}\n"
 
                 numberOfTabs -= 1
             else:
-                formatted_data += tabs + "\"" + key + "\"" +\
-                "\t\t" + "\"" + str(data[key]) + "\"" + "\n"
+                # \x06 character means the string was decoded with iso8859-1
+                # the character gets removed when encoding
+                if type(data[key]) == str and '\x06' in data[key]:
+                    formatted_data += tabs + b"\"" + key.replace("\\", "\\\\")\
+                        .encode() + b"\"" + b"\t\t" + b"\"" +\
+                        data[key][:-1].replace("\\", "\\\\").encode('latin-1')\
+                        + b"\"" + b"\n"
+                else:
+                    formatted_data += tabs + b"\"" + key.replace("\\", "\\\\")\
+                        .encode() + b"\"" + b"\t\t" + b"\"" +\
+                        str(data[key]).replace("\\", "\\\\").encode() + b"\""\
+                        + b"\n"
 
         return formatted_data
 
@@ -1269,6 +1275,7 @@ class ScrollableFrame(tk.Frame):
 
         self.canvas.yview_scroll(direction, "units")
 
+
 class LoadingWindow(tk.Toplevel):
     def __init__(self, parent):
         tk.Toplevel.__init__(self, parent)
@@ -1289,15 +1296,6 @@ class LoadingWindow(tk.Toplevel):
         # self.wait_visibility()
 
         self.update()
-
-
-
-if not path.isfile('config/config.cfg'):
-    with open('config/config.cfg', 'w'):
-        pass
-
-config = ConfigParser()
-config.read('config/config.cfg')
 
 def create_steam_path_window():
 
@@ -1403,14 +1401,23 @@ def get_steam_path():
 
     return config.get('STEAMPATH', 'Path')
 
-STEAM_PATH = get_steam_path()
-
 if __name__ == "__main__":
+
+    if not path.isfile('config/config.cfg'):
+
+        with open('config/config.cfg', 'w'):
+            pass
+
+    config = ConfigParser()
+    config.read('config/config.cfg')
+
+    STEAM_PATH = get_steam_path()
 
     # TODO: Implement silent patching
     parser = ArgumentParser()
     parser.add_argument('-s', '--silent', action='store_true',
         help='silently patch appinfo.vdf with previously made modifications')
+    args = parser.parse_args()
 
-    mainWindow = MainWindow()
+    mainWindow = MainWindow(silent=args.silent)
     mainWindow.window.mainloop()
