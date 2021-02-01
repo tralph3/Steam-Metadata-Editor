@@ -39,9 +39,13 @@ FONT               = "Verdana"
 CURRENT_OS         = system()
 
 HOME_DIR           = None
+CONFIG_PATH        = 'config'
+IMG_PATH           = 'img'
 
 if CURRENT_OS != 'Windows':
     HOME_DIR       = getenv('HOME')
+    CONFIG_PATH    = f"{HOME_DIR}/.local/share/Steam-Metadata-Editor/config"
+    IMG_PATH       = f"{HOME_DIR}/.local/share/Steam-Metadata-Editor/img"
 
 STEAM_PATH = None
 
@@ -59,7 +63,7 @@ class MainWindow():
                 self.appInfoVdf.parsedAppInfo[app]\
                     ['sections'] = self.jsonData[str(app)]['modified']
 
-            self.write_data_to_appinfo()
+            self.write_data_to_appinfo(notice=False)
 
         else:
             self.create_main_window()
@@ -83,9 +87,9 @@ class MainWindow():
         self.appInfoVdf = VDF()
 
         # button images
-        self.upArrowImage   = tk.PhotoImage(file="img/UpArrow.png")
-        self.downArrowImage = tk.PhotoImage(file="img/DownArrow.png")
-        self.deleteImage    = tk.PhotoImage(file="img/Delete.png")
+        self.upArrowImage   = tk.PhotoImage(file=f"{IMG_PATH}/UpArrow.png")
+        self.downArrowImage = tk.PhotoImage(file=f"{IMG_PATH}/DownArrow.png")
+        self.deleteImage    = tk.PhotoImage(file=f"{IMG_PATH}/Delete.png")
 
         # treeview style
         self.treeviewStyle = Style()
@@ -327,7 +331,7 @@ class MainWindow():
         return lbryDict
 
     def write_json(self):
-        with open('config/modifications.json', 'w') as mod:
+        with open(f'{CONFIG_PATH}/modifications.json', 'w') as mod:
             for app in self.modifiedApps:
                 self.jsonData[str(app)]['modified'] = self.appInfoVdf.\
                                     parsedAppInfo[app]['sections']
@@ -341,7 +345,7 @@ class MainWindow():
 
     def load_json(self):
         try:
-            with open('config/modifications.json', 'r') as mod:
+            with open(f'{CONFIG_PATH}/modifications.json', 'r') as mod:
                 self.jsonData = load(mod)
                 for app in self.jsonData:
                     app = int(app)
@@ -441,7 +445,7 @@ class MainWindow():
                 self.set_data_from_section(appID, appSteamReleaseDate,
                     'common', 'steam_release_date')
 
-    def write_data_to_appinfo(self):
+    def write_data_to_appinfo(self, notice=True):
 
         self.write_json()
 
@@ -449,6 +453,10 @@ class MainWindow():
             self.appInfoVdf.update_app(self.appInfoVdf.parsedAppInfo[app])
 
         self.appInfoVdf.write_data()
+
+        if notice:
+            messagebox.showinfo(title="Success!", message="Your changes "+\
+                "have been successfully applied!")
 
     def revert_app(self, appID):
 
@@ -500,12 +508,15 @@ class MainWindow():
             'common', 'steam_release_date')
         appOgReleaseDate    = self.get_data_from_section(appID,
             'common', 'original_release_date')
+        installed           = self.appInfoVdf.parsedAppInfo[appID]\
+            ['installed']
 
-        if\
+        if(\
+        appType.lower() == 'application' or\
         appType.lower() == 'game' or\
         appType.lower() == 'tool' or\
-        appType.lower() == 'demo' or\
-        appType.lower() == 'application':
+        appType.lower() == 'demo') and\
+        installed:
             self.launchMenuButton.configure(state='normal')
         else:
             self.launchMenuButton.configure(state='disabled')
@@ -747,6 +758,8 @@ class MainWindow():
             wkngDirPath = path.split(exePath)[0]
 
             execVar.set(exePath)
+            if CURRENT_OS == "Windows":
+                wkngDirVar = wkngDirVar.replace("/", "\\")
             wkngDirVar.set(wkngDirPath)
 
         elif pathType == 'wkngDir':
@@ -759,6 +772,8 @@ class MainWindow():
             wkngDirPath = self.calculate_parent_folders(wkngDirPath,
                 appID, installDir)
 
+            if CURRENT_OS == "Windows":
+                wkngDirVar = wkngDirVar.replace("/", "\\")
             wkngDirVar.set(wkngDirPath)
 
     def write_os_list(self, appID, winVar, macVar, linVar, launchOption):
@@ -1467,20 +1482,20 @@ def get_steam_path():
     config.add_section('STEAMPATH')
     config.set('STEAMPATH', 'Path', steamPath)
 
-    with open('config/config.cfg', 'w') as cfg:
+    with open(f'{CONFIG_PATH}/config.cfg', 'w') as cfg:
         config.write(cfg)
 
     return config.get('STEAMPATH', 'Path')
 
 if __name__ == "__main__":
 
-    if not path.isfile('config/config.cfg'):
+    if not path.isfile(f'{CONFIG_PATH}/config.cfg'):
 
-        with open('config/config.cfg', 'w'):
+        with open(f'{CONFIG_PATH}/config.cfg', 'w'):
             pass
 
     config = ConfigParser()
-    config.read('config/config.cfg')
+    config.read(f'{CONFIG_PATH}/config.cfg')
 
     STEAM_PATH = get_steam_path()
 
