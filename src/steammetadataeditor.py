@@ -12,6 +12,7 @@ from json import load, dump, JSONDecodeError
 from configparser import ConfigParser
 from copy import deepcopy
 from argparse import ArgumentParser
+from glob import glob
 
 # defaults
 BG                 = "#23272c"
@@ -275,6 +276,7 @@ class MainWindow():
         self.appListScrollbar.config(command=self.appList.yview)
 
         self.load_json()
+        self.mark_installed_games()
         self.populate_app_list()
 
         # destroy loading window and show main one
@@ -286,6 +288,43 @@ class MainWindow():
         self.window.update()
         self.window.update_idletasks()
         self.center_window(self.window)
+
+    def mark_installed_games(self):
+        lbryPath = path.join(STEAM_PATH, 'steamapps', 'libraryfolders.vdf')
+        with open(lbryPath, 'r') as libraries:
+            libraries = self.parse_library_folders(libraries.read())
+
+        for library in libraries.values():
+            appIDs = [acf.replace(library, "")[1:]\
+                for acf in glob(path.join(library, "*.acf"))]
+            appIDs = [int(acf.replace("appmanifest_", "").replace(".acf", ""))\
+                for acf in appIDs]
+
+            for app in appIDs:
+                self.appInfoVdf.parsedAppInfo[app]['installed'] = True
+                self.appInfoVdf.parsedAppInfo[app]['installDir'] = path.join(
+                    library, 'common', str(self.get_data_from_section(app,
+                        'config', 'installdir'))
+                )
+
+    def parse_library_folders(self, data):
+        # delete all irrelevant characters
+        data = data.replace("\t", "").replace("\n", "")\
+            .replace("\"LibraryFolders\"", "").replace("{", "")\
+            .replace("}", "")
+
+        # remove first and last character because they are trailing quotes
+        parsedData = data[1:-1].split("\"\"")
+        lbryDict = {}
+        lbryDict['0'] = path.join(STEAM_PATH, 'steamapps')
+
+        for key, value in zip(*[iter(parsedData)]*2):
+            lbryDict[key] = path.join(value, 'steamapps')
+
+        del lbryDict['TimeNextStatsReport']
+        del lbryDict['ContentStatsID']
+
+        return lbryDict
 
     def write_json(self):
         with open('config/modifications.json', 'w') as mod:
@@ -351,7 +390,7 @@ class MainWindow():
                 data[section] = {}
                 data = data[section]
 
-            data[sections[-1]] = value
+        data[sections[-1]] = value
 
     def get_unix_time(self, year, month, day):
         return int(datetime(year, month, day).timestamp())
@@ -660,6 +699,7 @@ class MainWindow():
         return allparts
 
     def calculate_parent_folders(self, executablePath, appID, steamDir):
+        # splits all folders in the path into strings
         steamDir  = self.split_directory(steamDir)
         execDir   = self.split_directory(executablePath)
 
@@ -675,6 +715,8 @@ class MainWindow():
         parentFolders = None
 
         for index, folder in enumerate(steamDir):
+            # count how many folders are needed to reach the earliest common
+            # parent folder
             if index == len(execDir) or folder != execDir[index]:
                 parentFolders = len(steamDir) - index
                 break
@@ -689,19 +731,18 @@ class MainWindow():
     def generate_launch_option_string(self, appID, execVar,
             wkngDirVar, pathType):
 
-        appFolder = self.get_data_from_section(appID, 'config', 'installdir')
-        steamDir  = f'{STEAM_PATH}/steamapps/common/{appFolder}'
+        installDir = self.appInfoVdf.parsedAppInfo[appID]['installDir']
 
 
         if pathType == 'exe':
 
             exePath = filedialog.askopenfilename(parent=self.launchMenuWindow,
-                initialdir=steamDir)
+                initialdir=installDir)
             if exePath == () or exePath == '':
                 return
 
             exePath = self.calculate_parent_folders(exePath,
-                appID, steamDir)
+                appID, installDir)
 
             wkngDirPath = path.split(exePath)[0]
 
@@ -711,12 +752,12 @@ class MainWindow():
         elif pathType == 'wkngDir':
 
             wkngDirPath = filedialog.askdirectory(parent=self.launchMenuWindow,
-                initialdir=steamDir)
+                initialdir=installDir)
             if wkngDirPath == () or wkngDirPath == '':
                 return
 
             wkngDirPath = self.calculate_parent_folders(wkngDirPath,
-                appID, steamDir)
+                appID, installDir)
 
             wkngDirVar.set(wkngDirPath)
 
@@ -1132,6 +1173,7 @@ class VDF():
         self.offset = self.appinfoData.find(byteData) + 1
         app = self.read_header()
         app['sections'] = self.parse_subsections()
+        app['installed'] = False
         return app
 
     def read_all_apps(self):
@@ -1142,6 +1184,7 @@ class VDF():
         while self.offset < len(self.appinfoData) - 4:
             app = self.read_header()
             app['sections'] = self.parse_subsections()
+            app['installed'] = False
             apps[app['appid']] = app
         return apps
 
