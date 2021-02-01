@@ -50,6 +50,24 @@ class MainWindow():
 
         self.modifiedApps = []
 
+        if silent:
+            self.load_json()
+            self.appInfoVdf = VDF(silent, self.modifiedApps)
+
+            for app in self.modifiedApps:
+                self.appInfoVdf.parsedAppInfo[app]\
+                    ['sections'] = self.jsonData[str(app)]['modified']
+
+            self.write_data_to_appinfo()
+
+        else:
+            self.create_main_window()
+
+            for app in self.modifiedApps:
+                self.appInfoVdf.parsedAppInfo[app]\
+                    ['sections'] = self.jsonData[str(app)]['modified']
+
+    def create_main_window(self):
         # define main window
         self.window = tk.Tk()
         self.window.title("Steam Metadata Editor")
@@ -289,8 +307,6 @@ class MainWindow():
                 for app in self.jsonData:
                     app = int(app)
                     self.modifiedApps.append(app)
-                    self.appInfoVdf.parsedAppInfo[app]\
-                        ['sections'] = self.jsonData[str(app)]['modified']
         except (FileNotFoundError, JSONDecodeError):
             self.jsonData = {}
 
@@ -1008,7 +1024,7 @@ class MainWindow():
 
 class VDF():
 
-    def __init__(self):
+    def __init__(self, silent=False, modifiedApps=None):
 
         # offset starts at 8 to skip the first 8 bytes
         # which are a the vdf's header
@@ -1031,10 +1047,15 @@ class VDF():
         with open(vdfPath, 'rb') as vdf:
             self.appinfoData = bytearray(vdf.read())
 
-        self.parsedAppInfo = self.read_all_apps()
+        if silent:
+            self.parsedAppInfo = {}
+            for app in modifiedApps:
+                self.parsedAppInfo[app] = self.read_app(app)
+        else:
+            self.parsedAppInfo = self.read_all_apps()
 
     ### READ DATA ###
-    def read_string(self, key=False):
+    def read_string(self):
         strEnd = self.appinfoData.find(self.INT_SEPARATOR, self.offset)
         try:
             string = self.appinfoData[self.offset:strEnd].decode('utf-8')
@@ -1070,7 +1091,7 @@ class VDF():
             if value_type == self.INT_SECTION_END:
                 break
 
-            key = self.read_string(key=True)
+            key = self.read_string()
             value = value_parsers[value_type]()
 
             subsection[key] = value
@@ -1108,7 +1129,7 @@ class VDF():
         # this ensures we are indeed getting an appid instead of some other
         # random number
         byteData = self.SECTION_END + pack("<I", appID)
-        self.offset = self.appinfoData.find(byteData)
+        self.offset = self.appinfoData.find(byteData) + 1
         app = self.read_header()
         app['sections'] = self.parse_subsections()
         return app
@@ -1187,13 +1208,20 @@ class VDF():
         # find where the app is in the file
         # based on the unmodified header
         appLocation = self.appinfoData.find(header)
+        if appLocation == -1:
+            appID = pack("<I", appinfo['appid'])
+            appLocation = self.appinfoData.find(self.SECTION_END + appID)
+
         # use the stored size to determine the end of the app
         appEndLocation = appLocation + appinfo['size'] + 8
 
         header = self.update_size_and_checksum(header, size, checksum)
 
         # replace the current app data with the new one
-        self.appinfoData[appLocation:appEndLocation] = header + sections
+        if appLocation != -1:
+            self.appinfoData[appLocation:appEndLocation] = header + sections
+        else:
+            self.appinfoData.extend(header + sections)
 
     def write_data(self):
         vdfPath = path.join(STEAM_PATH, 'appcache', 'appinfo.vdf')
@@ -1413,11 +1441,12 @@ if __name__ == "__main__":
 
     STEAM_PATH = get_steam_path()
 
-    # TODO: Implement silent patching
     parser = ArgumentParser()
     parser.add_argument('-s', '--silent', action='store_true',
         help='silently patch appinfo.vdf with previously made modifications')
     args = parser.parse_args()
 
     mainWindow = MainWindow(silent=args.silent)
-    mainWindow.window.mainloop()
+
+    if not args.silent:
+        mainWindow.window.mainloop()
