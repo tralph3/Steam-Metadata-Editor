@@ -22,9 +22,11 @@
 #                                #
 ##################################
 
-mkdir -pv ~/.local/share/Steam-Metadata-Editor/
-mv -vf config ~/.local/share/Steam-Metadata-Editor/
+set -exu
+
+mkdir -pv ~/.local/share/Steam-Metadata-Editor/config
+rm -rf ~/.local/share/Steam-Metadata-Editor/img
 mv -vf img ~/.local/share/Steam-Metadata-Editor/
 chmod +x steammetadataeditor
 echo "Moving script to /usr/bin"
-sudo mv steammetadataeditor /usr/bin
+sudo mv -vf steammetadataeditor /usr/bin
