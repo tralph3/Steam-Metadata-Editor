@@ -241,6 +241,23 @@ class MainWindow():
             activebackground=BTTN_ACTIVE_BG, activeforeground=BTTN_ACTIVE_FG,
             relief=BTTN_RELIEF, font=(BTTN_FONT, BTTN_FONT_SIZE),
             bg=BTTN_BG, fg=BTTN_FG)
+        self.hideDLCButton = tk.Button(self.buttonsFrame,
+            text="Hide DLC", command=lambda: self.hide_dlc(
+                self.idVar.get()
+            ),
+            activebackground=BTTN_ACTIVE_BG, activeforeground=BTTN_ACTIVE_FG,
+            relief=BTTN_RELIEF, font=(BTTN_FONT, BTTN_FONT_SIZE),
+            bg=BTTN_BG, fg=BTTN_FG)
+
+        self.showDLCButton = tk.Button(self.buttonsFrame,
+            text="Unhide DLC", command=lambda: self.unhide_dlc(
+                self.idVar.get()
+            ),
+            activebackground=BTTN_ACTIVE_BG, activeforeground=BTTN_ACTIVE_FG,
+            relief=BTTN_RELIEF, font=(BTTN_FONT, BTTN_FONT_SIZE),
+            bg=BTTN_BG, fg=BTTN_FG)
+
+
         self.saveButton = tk.Button(self.buttonsFrame,
             text="Save", command=self.write_data_to_appinfo,
             activebackground=BTTN_ACTIVE_BG, activeforeground=BTTN_ACTIVE_FG,
@@ -512,6 +529,20 @@ class MainWindow():
                 self.appList.delete(*self.appList.get_children())
                 self.populate_app_list()
 
+    def hide_dlc(self, appID):
+        appID = int(appID)
+        self.set_data_from_section(appID, 'hidden_DLC', 'common', 'type')
+        self.update_launch_menu_window(appID)
+        self.hideDLCButton.pack_forget()
+        self.showDLCButton.pack(side="left")
+
+    def unhide_dlc(self, appID):
+        appID = int(appID)
+        self.set_data_from_section(appID, 'DLC', 'common', 'type')
+        self.update_launch_menu_window(appID)
+        self.showDLCButton.pack_forget()
+        self.hideDLCButton.pack(side="left")
+
     def fetch_app_data(self, _event):
 
         # data from list
@@ -545,6 +576,13 @@ class MainWindow():
         else:
             self.launchMenuButton.configure(state='disabled')
 
+        self.hideDLCButton.pack_forget()
+        self.showDLCButton.pack_forget()
+        if appType.lower() == 'dlc':
+            self.hideDLCButton.pack(side="left")
+        if appType.lower() == 'hidden_dlc':
+            self.showDLCButton.pack(side="left")
+            
         if not appSteamReleaseDate:
             appSteamReleaseDate = 0
         if not appOgReleaseDate:
