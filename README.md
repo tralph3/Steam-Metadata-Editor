@@ -176,6 +176,18 @@ Then what do we do exactly? We format all the modified data this way (the functi
 
 So... what does this mean to us? It means that I spent months trying to figure out why I could produce valid checksums for some games, while others failed all the time. When generating the checksum, you need to add a second backslash to every single one that appears. That's why in `format_data` I use `replace` to change this: `\\` to this `\\\\`. As the backslash is an escape character, you need another backslash to escape its own special functionality, so there it is, that's the final piece of the puzzle to produce valid checksums.
 
+---
+
+## Building flatpak
+
+You can build and install this application as a flatpak with the following command:
+
+```bash
+flatpak-builder --user --install .flatpak-build-dir flatpak/com.github.tralph3.Steam-Metadata-Editor.yml
+```
+
+---
+
 ## Special Thanks
 
 Although I explained it all somewhat gracefully, that doesn't mean I managed to discover it myself sadly. I connected the dots later, but the actual information was provided to me by *Tim Green*, creator of [Steam Edit](https://steamedit.tg-software.com/). My application intends to be a cross-platform and open-source alternative to it, but in no way do I intend to make it obsolete or discredit *Tim*, he has been a great help in the creation of this program, and I'm positive I wouldn't have been able to create it without his help. A big thanks to him.
