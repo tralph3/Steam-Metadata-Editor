@@ -19,7 +19,7 @@ pkgver() {
 
 package() {
 
-  mkdir -pv $HOME/.local/share/${pkgname%-git}/config
+  mkdir -pv $HOME/.local/share/${_pkgname}/config
 
   local licdir="$pkgdir/usr/share/licenses/${pkgname%-git}"
   local bindir="$pkgdir/usr/bin"
