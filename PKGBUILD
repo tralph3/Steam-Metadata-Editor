@@ -29,5 +29,5 @@ package() {
   install -Dm0644 --target-directory "$imgdir" "$srcdir/$_pkgname/img/steam-metadata-editor.png"
   install -Dm0644 --target-directory "$imgdir" "$srcdir/$_pkgname/src/img/{UpArrow.png,DownArrow.png,Delete.png}"
   install -Dm0644 --target-directory "$appdir" "$srcdir/$_pkgname/steam-metadata-editor.desktop"
-  install -Dm0755 --target-directory "$bindir" "$srcdir/$_pkgname/src/steam-metadata-editor"
+  install -Dm0755 --target-directory "$bindir" "$srcdir/$_pkgname/src/steammetadataeditor"
 }

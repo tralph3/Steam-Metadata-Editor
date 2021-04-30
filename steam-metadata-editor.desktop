@@ -1,0 +1,12 @@
+[Desktop Entry]
+Encoding=UTF-8
+Exec=/usr/bin/steammetadataeditor
+Icon=/usr/share/pixmaps/Steam-Metadata-Editor/steam-metadata-editor.png
+Type=Application
+Terminal=false
+Comment=Metadata editor for Steam
+Name=Steam Metadata Editor
+GenericName=Steam Metadata Editor
+StartupNotify=false
+Categories=Utility;
+Version=1
