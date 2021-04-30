@@ -115,6 +115,22 @@ These entries are special, you can't use absolute paths here, you need to reach 
 
 ---
 
+## Installation
+
+* Linux
+
+Steam Metadata Editor can be installed from the [AUR](https://aur.archlinux.org/packages/steam-metadata-editor-git/).
+
+    paru -Syu steam-metadata-editor-git
+
+Other Linux distributions can download the source code. The program needs python3.6 or greater with the tk module.
+
+* Windows
+
+Download the source code and install python3.6 or greater. Make sure to install Tk/Tcl with it.
+
+---
+
 ## How does it work?
 
 The application is basically an easy way to modify a single file. Located in the folder **appcache** in the Steam installation, there's a file called **appinfo.vdf**. This is a binary file, meaning it's not easily readable, we can only see its bytes. Luckily, I was able to figure out exactly what everything means, with help of course.
