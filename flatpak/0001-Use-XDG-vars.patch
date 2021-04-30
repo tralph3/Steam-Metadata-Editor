@@ -1,0 +1,35 @@
+From 3da256a10f9330313f89fa0d7b0f307cd5c93f17 Mon Sep 17 00:00:00 2001
+From: Gerben Droogers <gerben@droogers.eu>
+Date: Tue, 6 Apr 2021 22:12:33 +0200
+Subject: [PATCH] Use XDG vars
+
+---
+ src/steammetadataeditor.py | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/src/steammetadataeditor.py b/src/steammetadataeditor.py
+index 87af988..5c1934c 100755
+--- a/src/steammetadataeditor.py
++++ b/src/steammetadataeditor.py
+@@ -37,6 +37,7 @@ from configparser import ConfigParser
+ from copy import deepcopy
+ from argparse import ArgumentParser
+ from glob import glob
++import os
+ 
+ # defaults
+ BG                 = "#23272c"
+@@ -68,8 +69,8 @@ IMG_PATH           = 'img'
+ 
+ if CURRENT_OS != 'Windows':
+     HOME_DIR       = getenv('HOME')
+-    CONFIG_PATH    = f"{HOME_DIR}/.local/share/Steam-Metadata-Editor/config"
+-    IMG_PATH       = f"{HOME_DIR}/.local/share/Steam-Metadata-Editor/img"
++    CONFIG_PATH    = os.environ['XDG_CONFIG_HOME']
++    IMG_PATH       = f"/app/share/Steam-Metadata-Editor/src/img"
+ 
+ STEAM_PATH = None
+ 
+-- 
+2.31.0
+

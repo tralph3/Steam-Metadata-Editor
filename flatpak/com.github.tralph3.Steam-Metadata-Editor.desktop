@@ -1,0 +1,9 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Name=Steam Metadata Editor
+Comment=An easy to use GUI that edits the metadata of your Steam Apps 
+Exec=start.sh
+Icon=com.github.tralph3.Steam-Metadata-Editor
+Type=Application
+Categories=Game
+Terminal=false

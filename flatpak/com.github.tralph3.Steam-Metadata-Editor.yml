@@ -1,0 +1,49 @@
+app-id: com.github.tralph3.Steam-Metadata-Editor
+runtime: org.freedesktop.Platform
+runtime-version: '20.08'
+sdk: org.freedesktop.Sdk
+command: start.sh
+finish-args:
+  - --filesystem=~/.local/share/Steam/
+  - --filesystem=~/.steam/
+  - --socket=x11
+  - --socket=wayland
+modules:
+  - name: Steam-Metadata-Editor
+    buildsystem: simple
+    build-commands:
+      - install -dm755 /app/share/Steam-Metadata-Editor
+      - install -D flatpak/start.sh /app/bin/start.sh
+      - install -Dm644 flatpak/com.github.tralph3.Steam-Metadata-Editor.png /app/share/icons/hicolor/512x512/apps/${FLATPAK_ID}.png
+      - install -Dm644 flatpak/com.github.tralph3.Steam-Metadata-Editor.desktop /app/share/applications/${FLATPAK_ID}.desktop
+      - cp -r --preserve=mode -t /app/share/Steam-Metadata-Editor/ src
+    sources:
+      - type: dir
+        path: ../
+      - type: patch
+        path: 0001-Use-XDG-vars.patch
+  - name: tkinter
+    buildsystem: simple
+    build-commands:
+    - pip3 install --prefix=${FLATPAK_DEST} .
+    sources:
+    - type: git
+      url: https://github.com/iwalton3/tkinter-standalone
+      commit: 2301112d142ebaf7532b25600c77d1a2edc9ef04
+    modules:
+    - name: tcl8.6.8
+      sources:
+      - type: archive
+        url: http://prdownloads.sourceforge.net/tcl/tcl8.6.6-src.tar.gz
+        sha256: a265409781e4b3edcc4ef822533071b34c3dc6790b893963809b9fe221befe07
+      subdir: unix
+      post-install:
+      - chmod +w /app/lib/libtcl8.6.so
+    - name: tk8.6.6
+      sources:
+      - type: archive
+        url: http://prdownloads.sourceforge.net/tcl/tk8.6.6-src.tar.gz
+        sha256: d62c371a71b4744ed830e3c21d27968c31dba74dd2c45f36b9b071e6d88eb19d
+      subdir: unix
+      post-install:
+      - chmod +w /app/lib/libtk8.6.so
