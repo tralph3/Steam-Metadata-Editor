@@ -1,5 +1,5 @@
 # Maintainer: Tomás Ralph <tomasralph2000@gmail.com>
-_pkgname=steam-metadata-editor
+_pkgname=Steam-Metadata-Editor
 pkgname=steam-metadata-editor-git
 pkgver=1
 pkgrel=1
@@ -28,7 +28,9 @@ package() {
   install -Dm0644 --target-directory "$docdir" "$srcdir/$_pkgname/README.md"
   install -Dm0644 --target-directory "$licdir" "$srcdir/$_pkgname/LICENSE"
   install -Dm0644 --target-directory "$imgdir" "$srcdir/$_pkgname/img/steam-metadata-editor.png"
-  install -Dm0644 --target-directory "$imgdir" "$srcdir/$_pkgname/src/img/{UpArrow.png,DownArrow.png,Delete.png}"
+  install -Dm0644 --target-directory "$imgdir" "$srcdir/$_pkgname/src/img/UpArrow.png"
+  install -Dm0644 --target-directory "$imgdir" "$srcdir/$_pkgname/src/img/DownArrow.png"
+  install -Dm0644 --target-directory "$imgdir" "$srcdir/$_pkgname/src/img/Delete.png"
   install -Dm0644 --target-directory "$appdir" "$srcdir/$_pkgname/steam-metadata-editor.desktop"
   install -Dm0755 --target-directory "$bindir" "$srcdir/$_pkgname/src/steammetadataeditor"
 }
