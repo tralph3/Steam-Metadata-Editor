@@ -349,8 +349,16 @@ class MainWindow():
         for key, value in zip(*[iter(parsedData)]*2):
             lbryDict[key] = path.join(value, 'steamapps')
 
-        del lbryDict['TimeNextStatsReport']
-        del lbryDict['ContentStatsID']
+        # sometimes these are missing
+        try:
+            del lbryDict['TimeNextStatsReport']
+        except:
+            pass
+
+        try:
+            del lbryDict['ContentStatsID']
+        except:
+            pass
 
         return lbryDict
 
