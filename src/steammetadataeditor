@@ -28,7 +28,7 @@ import tkinter as tk
 from tkinter.ttk import Treeview, Style
 from tkinter import filedialog, messagebox
 from datetime import datetime
-from os import path, getcwd, getenv, _exit
+from os import path, getcwd, getenv, _exit, makedirs
 from pathlib import Path
 from platform import system
 from struct import pack, unpack
@@ -1513,6 +1513,8 @@ def get_steam_path():
 
     config.add_section('STEAMPATH')
     config.set('STEAMPATH', 'Path', steamPath)
+
+    makedirs(CONFIG_PATH)
 
     with open(f'{CONFIG_PATH}/config.cfg', 'w') as cfg:
         config.write(cfg)
