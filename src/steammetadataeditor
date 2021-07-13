@@ -75,13 +75,23 @@ STEAM_PATH = None
 
 class MainWindow():
 
-    def __init__(self, silent):
+    def __init__(self, silent, export=None):
 
         self.modifiedApps = []
 
+        if export is not None:
+            self.modifiedApps.extend(export)
+            self.load_json()
+            self.appInfoVdf = VDF(True, apps=self.modifiedApps)
+
+            for app in self.modifiedApps:
+                self.save_original_data(app)
+
+            self.write_json()
+
         if silent:
             self.load_json()
-            self.appInfoVdf = VDF(silent, self.modifiedApps)
+            self.appInfoVdf = VDF(True, apps=self.modifiedApps)
 
             for app in self.modifiedApps:
                 self.appInfoVdf.parsedAppInfo[app]\
@@ -89,12 +99,16 @@ class MainWindow():
 
             self.write_data_to_appinfo(notice=False)
 
-        else:
+
+        if not silent and export is None:
             self.create_main_window()
 
             for app in self.modifiedApps:
                 self.appInfoVdf.parsedAppInfo[app]\
                     ['sections'] = self.jsonData[str(app)]['modified']
+
+
+
 
     def create_main_window(self):
         # define main window
@@ -381,7 +395,8 @@ class MainWindow():
                 self.jsonData = load(mod)
                 for app in self.jsonData:
                     app = int(app)
-                    self.modifiedApps.append(app)
+                    if app not in self.modifiedApps:
+                        self.modifiedApps.append(app)
         except (FileNotFoundError, JSONDecodeError):
             self.jsonData = {}
 
@@ -1112,10 +1127,10 @@ class MainWindow():
 
 class VDF():
 
-    def __init__(self, silent=False, modifiedApps=None):
+    def __init__(self, chooseApps=False, apps=None):
 
         # offset starts at 8 to skip the first 8 bytes
-        # which are a the vdf's header
+        # which are the vdf's header
         self.offset = 8
 
         self.SEPARATOR   = b'\x00'
@@ -1135,9 +1150,10 @@ class VDF():
         with open(vdfPath, 'rb') as vdf:
             self.appinfoData = bytearray(vdf.read())
 
-        if silent:
+        # load only the modified apps
+        if chooseApps:
             self.parsedAppInfo = {}
-            for app in modifiedApps:
+            for app in apps:
                 self.parsedAppInfo[app] = self.read_app(app)
         else:
             self.parsedAppInfo = self.read_all_apps()
@@ -1218,6 +1234,9 @@ class VDF():
         # random number
         byteData = self.SECTION_END + pack("<I", appID)
         self.offset = self.appinfoData.find(byteData) + 1
+        if self.offset == 0:
+            print(f"App {appID} not found")
+            _exit(2)
         app = self.read_header()
         app['sections'] = self.parse_subsections()
         app['installed'] = False
@@ -1536,9 +1555,11 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument('-s', '--silent', action='store_true',
         help='silently patch appinfo.vdf with previously made modifications')
+    parser.add_argument('-e', '--export', nargs="+", type=int,
+        help='export the contents of all the given appIDs into the JSON')
     args = parser.parse_args()
 
-    mainWindow = MainWindow(silent=args.silent)
+    mainWindow = MainWindow(silent=args.silent, export=args.export)
 
-    if not args.silent:
+    if not args.silent and args.export is None:
         mainWindow.window.mainloop()
