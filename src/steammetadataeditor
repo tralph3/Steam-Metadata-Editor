@@ -1533,14 +1533,14 @@ def get_steam_path():
     config.add_section('STEAMPATH')
     config.set('STEAMPATH', 'Path', steamPath)
 
-    makedirs(CONFIG_PATH, exist_ok=True)
-
     with open(f'{CONFIG_PATH}/config.cfg', 'w') as cfg:
         config.write(cfg)
 
     return config.get('STEAMPATH', 'Path')
 
 if __name__ == "__main__":
+
+    makedirs(CONFIG_PATH, exist_ok=True)
 
     if not path.isfile(f'{CONFIG_PATH}/config.cfg'):
 
