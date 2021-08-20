@@ -1533,7 +1533,7 @@ def get_steam_path():
     config.add_section('STEAMPATH')
     config.set('STEAMPATH', 'Path', steamPath)
 
-    makedirs(CONFIG_PATH)
+    makedirs(CONFIG_PATH, exist_ok=True)
 
     with open(f'{CONFIG_PATH}/config.cfg', 'w') as cfg:
         config.write(cfg)
