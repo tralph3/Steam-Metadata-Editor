@@ -18,6 +18,7 @@ mkdir -pv packaging/usr/bin
 
 cp -vf LICENSE packaging/usr/share/licenses/steam-metadata-editor
 cp -vf src/img/*.png packaging/usr/share/pixmaps/steam-metadata-editor
+cp -vf img/steam-metadata-editor.png packaging/usr/share/pixmaps/steam-metadata-editor
 cp -vf steam-metadata-editor.desktop packaging/usr/share/applications
 cp -vf README.md packaging/usr/share/doc/steam-metadata-editor
 cp -vf src/steammetadataeditor packaging/usr/bin
