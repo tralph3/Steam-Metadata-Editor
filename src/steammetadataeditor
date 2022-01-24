@@ -255,6 +255,13 @@ class MainWindow():
             activebackground=BTTN_ACTIVE_BG, activeforeground=BTTN_ACTIVE_FG,
             relief=BTTN_RELIEF, font=(BTTN_FONT, BTTN_FONT_SIZE),
             bg=BTTN_BG, fg=BTTN_FG)
+        self.HideDLCButton = tk.Button(self.buttonsFrame,
+            text="Hide DLC", command=lambda: self.hide_dlc(
+                self.idVar.get()
+            ),
+            activebackground=BTTN_ACTIVE_BG, activeforeground=BTTN_ACTIVE_FG,
+            relief=BTTN_RELIEF, font=(BTTN_FONT, BTTN_FONT_SIZE),
+            bg=BTTN_BG, fg=BTTN_FG)
         self.saveButton = tk.Button(self.buttonsFrame,
             text="Save", command=self.write_data_to_appinfo,
             activebackground=BTTN_ACTIVE_BG, activeforeground=BTTN_ACTIVE_FG,
@@ -290,6 +297,7 @@ class MainWindow():
         self.steamReleaseEntry1.pack(side="right", padx=(0,10))
 
         self.launchMenuButton.pack(side="left")
+        self.HideDLCButton.pack(side="left")
         self.revertAppButton.pack(side="left")
         self.saveButton.pack(side="right")
 
@@ -535,6 +543,14 @@ class MainWindow():
                 self.appList.delete(*self.appList.get_children())
                 self.populate_app_list()
 
+    def hide_dlc(self, appID):
+        appID = int(appID)
+        if self.get_data_from_section(appID, 'common', 'type') == 'dlc':
+            self.set_data_from_section(appID, 'hidden_dlc', 'common', 'type')
+        else:
+            self.set_data_from_section(appID, 'dlc', 'common', 'type')
+        self.populate_app_list()
+
     def fetch_app_data(self, _event):
 
         # data from list
@@ -567,6 +583,15 @@ class MainWindow():
             self.launchMenuButton.configure(state='normal')
         else:
             self.launchMenuButton.configure(state='disabled')
+
+        if appType.lower()[-3:] == 'dlc':
+            self.HideDLCButton.configure(state='normal')
+            if appType.lower() == 'dlc':
+                self.HideDLCButton.configure(text='Hide DLC')
+            else:
+                self.HideDLCButton.configure(text='Show DLC')
+        else:
+            self.HideDLCButton.configure(state='disabled')
 
         if not appSteamReleaseDate:
             appSteamReleaseDate = 0
