@@ -364,15 +364,11 @@ class MainWindow():
             lbryDict[key] = path.join(value, 'steamapps')
 
         # sometimes these are missing
-        try:
+        if "TimeNextStatsReport" in lbryDict.keys():
             del lbryDict['TimeNextStatsReport']
-        except:
-            pass
 
-        try:
+        if "ContentStatsID" in lbryDict.keys():
             del lbryDict['ContentStatsID']
-        except:
-            pass
 
         return lbryDict
 
