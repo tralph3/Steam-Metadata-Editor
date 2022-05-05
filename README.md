@@ -123,7 +123,19 @@ Steam Metadata Editor can be installed from the [AUR](https://aur.archlinux.org/
 
     paru -Syu steam-metadata-editor-git
 
-Other Linux distributions can download the source code. The program needs python3.6 or greater with the tk module.
+If you are in an Ubuntu/Debian based distribution, you can download the source code and run the `make_deb.sh` script.
+
+    ./make_deb.sh
+
+You may need to mark it as executable first:
+
+    chmod +x make_deb.sh
+
+**The script must be ran on the project's root folder, make sure to cd into it.**
+
+The script will generate a `ZeroTier-GUI.deb` package in the root directory. Simply install it with `sudo apt install ./ZeroTier-GUI.deb`.
+
+Other Linux distributions can download the source code. The program needs Python3.6 or greater with the tk module.
 
 * Windows
 
