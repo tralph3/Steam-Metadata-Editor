@@ -64,7 +64,7 @@ CURRENT_OS         = system()
 
 HOME_DIR           = None
 CONFIG_PATH        = 'config'
-IMG_PATH           = 'img'
+IMG_PATH           = f"{path.dirname(__file__)}/img"
 
 if CURRENT_OS != 'Windows':
     HOME_DIR       = getenv('HOME')
