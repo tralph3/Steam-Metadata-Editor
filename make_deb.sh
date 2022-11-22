@@ -5,27 +5,25 @@
 packageVersion=$(printf "1.r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)")
 
 # Create file structure
-
 mkdir -pv packaging/DEBIAN
 mkdir -pv packaging/usr/share/licenses/steam-metadata-editor
 mkdir -pv packaging/usr/share/pixmaps/steam-metadata-editor
 mkdir -pv packaging/usr/share/applications
 mkdir -pv packaging/usr/share/doc/steam-metadata-editor
+mkdir -pv packaging/opt/sme
 mkdir -pv packaging/usr/bin
 
 
 # Copy files to corresponding directories
-
 cp -vf LICENSE packaging/usr/share/licenses/steam-metadata-editor
-cp -vf src/img/*.png packaging/usr/share/pixmaps/steam-metadata-editor
 cp -vf img/steam-metadata-editor.png packaging/usr/share/pixmaps/steam-metadata-editor
 cp -vf steam-metadata-editor.desktop packaging/usr/share/applications
 cp -vf README.md packaging/usr/share/doc/steam-metadata-editor
-cp -vf src/steammetadataeditor packaging/usr/bin
+cp -vf steammetadataeditor packaging/usr/bin
+cp -vfr src/* packaging/opt/sme
 
 
 # Create control file
-
 echo "Package: steam-metadata-editor-git
 Version: ${packageVersion}
 Architecture: all

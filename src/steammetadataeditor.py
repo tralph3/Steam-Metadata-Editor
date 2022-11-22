@@ -69,7 +69,6 @@ IMG_PATH           = 'img'
 if CURRENT_OS != 'Windows':
     HOME_DIR       = getenv('HOME')
     CONFIG_PATH    = f"{HOME_DIR}/.local/share/Steam-Metadata-Editor/config"
-    IMG_PATH       = "/usr/share/pixmaps/steam-metadata-editor"
 
 STEAM_PATH = None
 
