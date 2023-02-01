@@ -75,7 +75,6 @@ STEAM_PATH = None
 
 class MainWindow:
     def __init__(self, silent, export=None):
-
         self.modifiedApps = []
 
         if export is not None:
@@ -489,7 +488,6 @@ class MainWindow:
             dump(self.jsonData, mod, indent=2)
 
     def save_original_data(self, appID):
-
         appData = deepcopy(self.appInfoVdf.parsedAppInfo[appID]["sections"])
         self.jsonData[str(appID)] = {}
         self.jsonData[str(appID)]["original"] = appData
@@ -506,7 +504,6 @@ class MainWindow:
             self.jsonData = {}
 
     def get_data_from_section(self, appID, *sections, error=""):
-
         data = self.appInfoVdf.parsedAppInfo[appID]["sections"]["appinfo"]
         for section in sections:
             try:
@@ -519,7 +516,6 @@ class MainWindow:
     # given a var, it removes the callback, sets the value
     # and reassigns the callback
     def set_var_no_callback(self, var, value, callback):
-
         try:
             callbackId = var.trace_vinfo()[0][1]
             var.trace_remove("write", callbackId)
@@ -530,7 +526,6 @@ class MainWindow:
         var.trace_add("write", callback)
 
     def set_data_from_section(self, appID, value, *sections):
-
         appID = int(appID)
 
         if appID not in self.modifiedApps:
@@ -552,7 +547,6 @@ class MainWindow:
         return int(datetime(year, month, day).timestamp())
 
     def set_timestamps(self, stampId):
-
         appID = int(self.idVar.get())
 
         def validate_date_format(year, month, day):
@@ -600,7 +594,6 @@ class MainWindow:
                 )
 
     def write_data_to_appinfo(self, notice=True):
-
         self.write_json()
 
         for app in self.modifiedApps:
@@ -615,7 +608,6 @@ class MainWindow:
             )
 
     def revert_app(self, appID):
-
         appID = int(appID)
 
         if appID in self.modifiedApps:
@@ -648,7 +640,6 @@ class MainWindow:
                 self.populate_app_list()
 
     def fetch_app_data(self, _event):
-
         # data from list
         currentItem = self.appList.focus()
         currentItemData = self.appList.item(currentItem)
@@ -788,7 +779,6 @@ class MainWindow:
         )
 
     def locate_app_in_list(self):
-
         query = self.searchBar.get().lower()
 
         # clear list to fill it with results
@@ -803,7 +793,6 @@ class MainWindow:
             self.populate_app_list()
 
     def center_window(self, window):
-
         screenWidth = window.winfo_screenwidth()
         screenHeight = window.winfo_screenheight()
         windowWidth = window.winfo_reqwidth()
@@ -817,7 +806,6 @@ class MainWindow:
         )
 
     def move_launch_option(self, appID, optionNumber, direction):
-
         launchOption = self.get_data_from_section(
             appID, "config", "launch", optionNumber
         )
@@ -860,7 +848,6 @@ class MainWindow:
             return
 
     def delete_launch_option(self, appID, optionNumber):
-
         launchOptions = self.get_data_from_section(appID, "config", "launch")
 
         if len(launchOptions.keys()) > 1:
@@ -885,7 +872,6 @@ class MainWindow:
             return
 
     def add_launch_option(self, appID):
-
         launchOptions = self.get_data_from_section(appID, "config", "launch")
         newEntryNumber = str(len(launchOptions))
         self.set_data_from_section(appID, {}, "config", "launch", newEntryNumber)
@@ -935,7 +921,6 @@ class MainWindow:
             return "/".join(execDir[index + 1 :])
 
     def generate_launch_option_string(self, appID, execVar, wkngDirVar, pathType):
-
         installDir = self.appInfoVdf.parsedAppInfo[appID]["installDir"]
 
         if pathType == "exe":
@@ -1253,7 +1238,6 @@ class MainWindow:
         ]
 
     def update_launch_menu_window(self, appID):
-
         # clear frame and store current scroll position
         scrollbarPosition = 0
         for widget in self.scrollFrame.scrollableFrame.winfo_children():
@@ -1332,7 +1316,6 @@ class MainWindow:
         self.scrollFrame.canvas.yview_moveto(scrollbarPosition)
 
     def create_launch_menu_window(self):
-
         appName = self.nameVar.get()
         appID = int(self.idVar.get())
 
@@ -1354,7 +1337,6 @@ class MainWindow:
         self.launchMenuWindow.mainloop()
 
     def populate_app_list(self):
-
         # get all aplications found in appinfo.vdf
         keys = list(self.appInfoVdf.parsedAppInfo.keys())
 
@@ -1379,7 +1361,6 @@ class MainWindow:
 
 class VDF:
     def __init__(self, chooseApps=False, apps=None):
-
         # offset starts at 8 to skip the first 8 bytes
         # which are the vdf's header
         self.offset = 8
@@ -1454,15 +1435,15 @@ class VDF:
         return subsection
 
     def read_header(self):
-
         keys = [
             "appid",
             "size",
             "state",
             "last_update",
             "access_token",
-            "checksum",
+            "checksum_text",
             "change_number",
+            "checksum_binary",
         ]
 
         formats = [
@@ -1473,6 +1454,7 @@ class VDF:
             ["<Q", 8],
             ["<20s", 20],
             ["<I", 4],
+            ["<20s", 20],
         ]
 
         headerData = {}
@@ -1515,14 +1497,15 @@ class VDF:
     ### ENCODE DATA ###
     def encode_header(self, data):
         return pack(
-            "<4IQ20sI",
+            "<4IQ20sI20s",
             data["appid"],
             data["size"],
             data["state"],
             data["last_update"],
             data["access_token"],
-            data["checksum"],
+            data["checksum_text"],
             data["change_number"],
+            data["checksum_binary"],
         )
 
     def encode_string(self, string):
@@ -1560,27 +1543,28 @@ class VDF:
         encodedData += self.SECTION_END
         return encodedData
 
-    def get_checksum(self, data):
+    def get_text_checksum(self, data):
         formatted_data = self.format_data(data)
         hsh = sha1(formatted_data)
-
         return hsh.digest()
 
-    def update_size_and_checksum(self, header, size, checksum):
+    def get_binary_checksum(self, data):
+        hsh = sha1(data)
+        return hsh.digest()
+
+    def update_size_and_checksum(self, header, size, checksum_text, checksum_binary):
         header = bytearray(header)
-        # replace size
         header[4:8] = pack("<I", size)
-        # replace checksum
-        header[24:44] = pack("<20s", checksum)
+        header[24:44] = pack("<20s", checksum_text)
+        header[48:68] = pack("<20s", checksum_binary)
 
         return header
 
     def update_app(self, appinfo):
-
         # encode new data
         header = self.encode_header(appinfo)
         sections = self.encode_subsections(appinfo["sections"])
-        checksum = self.get_checksum(appinfo["sections"])
+        checksum_text = self.get_text_checksum(appinfo["sections"])
         # appid and size don't count, so we skip them
         # by removing 8 bytes from the header
         size = len(sections) + len(header) - 8
@@ -1594,8 +1578,11 @@ class VDF:
 
         # use the stored size to determine the end of the app
         appEndLocation = appLocation + appinfo["size"] + 8
+        checksum_binary = self.get_binary_checksum(sections)
 
-        header = self.update_size_and_checksum(header, size, checksum)
+        header = self.update_size_and_checksum(
+            header, size, checksum_text, checksum_binary
+        )
 
         # replace the current app data with the new one
         if appLocation != -1:
@@ -1609,7 +1596,6 @@ class VDF:
             vdf.write(self.appinfoData)
 
     def format_data(self, data, numberOfTabs=0):
-
         """
         Formats a python dictionary into the vdf text format.
         """
@@ -1702,7 +1688,6 @@ class ScrollableFrame(tk.Frame):
         self.scrollbar.pack(side="right", fill="y")
 
     def scroll_canvas(self, event):
-
         if event.num == 5 or event.delta < 0:
             direction = 1
         elif event.num == 4 or event.delta > 0:
@@ -1735,11 +1720,9 @@ class LoadingWindow(tk.Toplevel):
 
 
 def create_steam_path_window():
-
     finalPath = ""
 
     def set_steam_path():
-
         steamPath = filedialog.askdirectory()
         steamPath = Path(steamPath)
         steamPath = steamPath.resolve()
@@ -1747,7 +1730,6 @@ def create_steam_path_window():
         directoryEntry.insert(0, steamPath)
 
     def validate_path():
-
         if verify_steam_path(directoryEntry.get()):
             nonlocal finalPath
             finalPath = directoryEntry.get()
@@ -1831,7 +1813,6 @@ def create_steam_path_window():
 
 
 def verify_steam_path(steamPath):
-
     appinfoDirectory = path.join(steamPath, "appcache", "appinfo.vdf")
 
     if path.isdir(steamPath) and path.isfile(appinfoDirectory):
@@ -1841,7 +1822,6 @@ def verify_steam_path(steamPath):
 
 
 def get_steam_path():
-
     if "STEAMPATH" in config:
         if verify_steam_path(config.get("STEAMPATH", "Path")):
             return config.get("STEAMPATH", "Path")
@@ -1870,7 +1850,6 @@ def get_steam_path():
 
 
 if __name__ == "__main__":
-
     makedirs(CONFIG_PATH, exist_ok=True)
 
     if not path.isfile(f"{CONFIG_PATH}/config.cfg"):
