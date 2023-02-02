@@ -19,11 +19,11 @@ The Editor features an easy to use GUI that lets you edit the most important asp
 
 When you launch the program, you should see something like this (note that the list of games depends on what you own):
 
-<img src="img/layout.png" width="1000">
+![image](https://user-images.githubusercontent.com/41462117/216201913-6b1dacd8-3d43-464e-bee4-539ad7c86b1f.png)
 
 To modify a game, you simply have to click on the one you want, and do your editing. You can use the bar at the top of the list to search for the game you want. In this example, we will edit **Endless Space 2**:
 
-<img src="img/mod.png" width="1000">
+![image](https://user-images.githubusercontent.com/41462117/216202151-8f9776f7-ef7c-4d50-96d7-dcc4590ba5a1.png)
 
 You can see I removed the "Registered" character and removed the "Digital Deluxe Edition" part. I also shortened the **Developer** section.
 
@@ -31,7 +31,7 @@ Once modifications are made, simply click **Save** and restart Steam.
 
 And here are our modifications:
 
-<img src="img/edits.png" width="1000">
+![image](https://user-images.githubusercontent.com/41462117/216202183-3cccc598-4c64-4470-a077-a4e1ebc3cff1.png)
 
 Easy huh? So what is it useful for?
 
@@ -41,19 +41,19 @@ Easy huh? So what is it useful for?
 
 * Order your list of games
 
-<img src="img/edits2.png" width="1000">
+![image](https://user-images.githubusercontent.com/41462117/216202211-5ad34771-ff71-4a1b-84c1-8b1475eaedc3.png)
 
 * Fix missing executable errors
 
-<img src="img/steam_error.png" width="1000">
+![image](https://user-images.githubusercontent.com/41462117/216202244-1aea2ccb-9dfd-4de8-8c19-798790127d38.png)
 
 * Create your own launch menus, letting you seamlessly launch multiple modded installations from Steam
 
-<img src="img/edits3.png">
+![image](https://user-images.githubusercontent.com/41462117/216202278-40ef36a3-a174-4646-a92b-42f5bc11a7d2.png)
 
 * Add missing information like release dates
 
-<img src="img/edits4.png" width="1000">
+![image](https://user-images.githubusercontent.com/41462117/216202300-d23a11e2-ef2a-48a4-8074-f4e47868404f.png)
 
 * Any other modifcation you want through the JSON
 
@@ -155,7 +155,7 @@ Applications have a header too, here's what everything means:
 
 **NOTE: The names for these tags and most of this information is taken directly from [steamfiles](https://github.com/leovp/steamfiles)' source code. Big thanks to its developer.**
 
-<img src="img/labels.png" width="1000">
+![image](https://user-images.githubusercontent.com/41462117/216202345-dfd555bc-a36b-4b7d-8335-8ffdaca78d88.png)
 
 All of these values are stored in litte-endian notation. Right after the last byte in the header, the actual appinfo starts.
 
