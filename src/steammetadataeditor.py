@@ -216,7 +216,7 @@ class MainWindow:
         self.appList.column("Type", width=50, minwidth=20)
         self.appList.column("Mod", width=55, minwidth=20)
         self.appList.column("ID", width=80, minwidth=80)
-        self.appList.bind("<ButtonRelease-1>", self.fetch_app_data)
+        self.appList.bind("<<TreeviewSelect>>", self.fetch_app_data)
 
         # right side
         self.idLabel = tk.Label(
