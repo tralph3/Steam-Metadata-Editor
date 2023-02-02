@@ -811,12 +811,14 @@ class MainWindow:
         )
 
     def ask_to_create_launch_option(self, appID):
+        self.launchMenuWindow.withdraw()
         answer = messagebox.askyesno(
             "No Launch Options",
             "This app has no launch options. Do you wish to create one?",
         )
         if answer:
             self.add_launch_option(appID)
+            self.launchMenuWindow.deiconify()
         else:
             self.launchMenuWindow.destroy()
 
