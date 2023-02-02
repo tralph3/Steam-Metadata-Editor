@@ -28,7 +28,7 @@ import tkinter as tk
 from tkinter.ttk import Treeview, Style
 from tkinter import filedialog, messagebox
 from datetime import datetime
-from os import path, getcwd, getenv, _exit, makedirs
+from os import path, getenv, _exit, makedirs
 from pathlib import Path
 from platform import system
 from struct import pack, unpack
@@ -71,6 +71,11 @@ if CURRENT_OS != "Windows":
     CONFIG_PATH = f"{HOME_DIR}/.local/share/Steam-Metadata-Editor/config"
 
 STEAM_PATH = None
+
+
+class IncompatibleVDFError(Exception):
+    def __init__(self, vdf_version):
+        self.vdf_version = vdf_version
 
 
 class MainWindow:
@@ -1361,9 +1366,9 @@ class MainWindow:
 
 class VDF:
     def __init__(self, chooseApps=False, apps=None):
-        # offset starts at 8 to skip the first 8 bytes
-        # which are the vdf's header
-        self.offset = 8
+        self.offset = 0
+
+        self.COMPATIBLE_VERSIONS = [0x107564428]
 
         self.SEPARATOR = b"\x00"
         self.TYPE_DICT = b"\x00"
@@ -1403,9 +1408,13 @@ class VDF:
         self.offset += strEnd - self.offset + 1
         return string
 
+    def read_int64(self):
+        int64 = unpack("<Q", self.appinfoData[self.offset : self.offset + 8])[0]
+        self.offset += 8
+        return int64
+
     def read_int32(self):
         int32 = unpack("<I", self.appinfoData[self.offset : self.offset + 4])[0]
-        # move offset past data
         self.offset += 4
         return int32
 
@@ -1468,10 +1477,16 @@ class VDF:
 
         return headerData
 
+    def verify_vdf_version(self):
+        version = self.read_int64()
+        if version not in self.COMPATIBLE_VERSIONS:
+            raise IncompatibleVDFError(version)
+
     def read_app(self, appID):
         # all relevant apps will have a previous section ending before them
         # this ensures we are indeed getting an appid instead of some other
         # random number
+        self.verify_vdf_version()
         byteData = self.SECTION_END + pack("<I", appID)
         self.offset = self.appinfoData.find(byteData) + 1
         if self.offset == 0:
@@ -1483,6 +1498,7 @@ class VDF:
         return app
 
     def read_all_apps(self):
+        self.verify_vdf_version()
         apps = {}
         # the last appid is 0 but there's no actual data for it,
         # we skip it by checking 4 less bytes to not get into
@@ -1851,9 +1867,7 @@ def get_steam_path():
 
 if __name__ == "__main__":
     makedirs(CONFIG_PATH, exist_ok=True)
-
     if not path.isfile(f"{CONFIG_PATH}/config.cfg"):
-
         with open(f"{CONFIG_PATH}/config.cfg", "w"):
             pass
 
@@ -1878,7 +1892,12 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    mainWindow = MainWindow(silent=args.silent, export=args.export)
-
-    if not args.silent and args.export is None:
-        mainWindow.window.mainloop()
+    try:
+        mainWindow = MainWindow(silent=args.silent, export=args.export)
+        if not args.silent and args.export is None:
+            mainWindow.window.mainloop()
+    except IncompatibleVDFError as e:
+        messagebox.showerror(
+            title="Invalid VDF Version",
+            message=f"VDF version {e.vdf_version:#08x} is not supported."
+        )
