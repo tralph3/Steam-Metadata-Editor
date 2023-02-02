@@ -649,7 +649,6 @@ class MainWindow:
         currentItem = self.appList.focus()
         currentItemData = self.appList.item(currentItem)
         appID = currentItemData["values"][-1]
-        appType = currentItemData["values"][0]
         # fetched data
         appName = self.get_data_from_section(appID, "common", "name")
         appSortAs = self.get_data_from_section(appID, "common", "sortas")
@@ -661,17 +660,6 @@ class MainWindow:
         appOgReleaseDate = self.get_data_from_section(
             appID, "common", "original_release_date"
         )
-        installed = self.appInfoVdf.parsedAppInfo[appID]["installed"]
-
-        if (
-            appType.lower() == "application"
-            or appType.lower() == "game"
-            or appType.lower() == "tool"
-            or appType.lower() == "demo"
-        ) and installed:
-            self.launchMenuButton.configure(state="normal")
-        else:
-            self.launchMenuButton.configure(state="disabled")
 
         if not appSteamReleaseDate:
             appSteamReleaseDate = 0
