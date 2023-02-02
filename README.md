@@ -131,7 +131,7 @@ You may need to mark it as executable first:
 
 **The script must be ran on the project's root folder, make sure to cd into it.**
 
-The script will generate a `ZeroTier-GUI.deb` package in the root directory. Simply install it with `sudo apt install ./ZeroTier-GUI.deb`.
+The script will generate a `Steam-Metadata-Editor.deb` package in the root directory. Simply install it with `sudo apt install ./Steam-Metadata-Editor.deb`.
 
 Other Linux distributions can download the source code. The program needs Python3.6 or greater with the tk module.
 
@@ -166,6 +166,8 @@ This is known information, and nothing too complicated. The application just wal
 ### Modifying data
 
 If you try to just change the data to whatever you want, you'll realize that Steam will reject it and revert changes back. Why? The key lies in the `checksum` and `size` tags in the header. Both of these relate to the data directly, and must be updated for Steam to not reject the new data.
+
+**NOTE:** Valve has since modified the header and incldued an extra checksum that is calculated with the byte data of the app you're modifying. Simply send the bytes through SHA-1, and you should get a valid checksum.
 
 The `size` tag is pretty self explanatory, it's a 32-bit integer detailing how many bytes of data this application contains, counting from the very next section (`state`) to the very last `0x08` byte.
 
@@ -207,3 +209,5 @@ So... what does this mean to us? It means that I spent months trying to figure o
 Although I explained it all somewhat gracefully, that doesn't mean I managed to discover it myself sadly. I connected the dots later, but the actual information was provided to me by *Tim Green*, creator of [Steam Edit](https://steamedit.tg-software.com/). My application intends to be a cross-platform and open-source alternative to it, but in no way do I intend to make it obsolete or discredit *Tim*, he has been a great help in the creation of this program, and I'm positive I wouldn't have been able to create it without his help. A big thanks to him.
 
 I'd also like to thank [*Leonid*](https://github.com/leovp) for indirectly aiding me by making the source code of [steamfiles](https://github.com/leovp/steamfiles) freely available to anyone, it has greatly helped me understand how the file worked, and I even borrowed some code.
+
+Finally, thanks to [*xPaw*](https://github.com/xPaw) for documenting an update to the file format that included an extra checksum in [this](https://github.com/SteamDatabase/SteamAppInfo) repo.
