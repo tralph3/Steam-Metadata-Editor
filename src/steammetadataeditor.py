@@ -810,6 +810,16 @@ class MainWindow:
             f"{windowWidth}x{windowHeight}+" + f"{int(windowX)}+{int(windowY)}"
         )
 
+    def ask_to_create_launch_option(self, appID):
+        answer = messagebox.askyesno(
+            "No Launch Options",
+            "This app has no launch options. Do you wish to create one?",
+        )
+        if answer:
+            self.add_launch_option(appID)
+        else:
+            self.launchMenuWindow.destroy()
+
     def move_launch_option(self, appID, optionNumber, direction):
         launchOption = self.get_data_from_section(
             appID, "config", "launch", optionNumber
@@ -822,7 +832,7 @@ class MainWindow:
                 appID, "config", "launch", newOptionNumber, error=False
             )
 
-            if nextLaunchOption != False:
+            if nextLaunchOption is not False:
                 self.set_data_from_section(
                     appID, nextLaunchOption, "config", "launch", optionNumber
                 )
@@ -839,7 +849,7 @@ class MainWindow:
                 appID, "config", "launch", newOptionNumber, error=False
             )
 
-            if prevLaunchOption != False:
+            if prevLaunchOption is not False:
                 self.set_data_from_section(
                     appID, prevLaunchOption, "config", "launch", optionNumber
                 )
@@ -855,26 +865,23 @@ class MainWindow:
     def delete_launch_option(self, appID, optionNumber):
         launchOptions = self.get_data_from_section(appID, "config", "launch")
 
-        if len(launchOptions.keys()) > 1:
-            found = False
-            keys = list(launchOptions.keys())
-            for launchOption in keys:
-                if not found:
-                    if launchOption == optionNumber:
-                        found = True
-                else:
-                    newOptionNumber = str(int(launchOption) - 1)
-                    self.set_data_from_section(
-                        appID,
-                        launchOptions[launchOption],
-                        "config",
-                        "launch",
-                        newOptionNumber,
-                    )
-            del launchOptions[keys[-1]]
-            self.update_launch_menu_window(appID)
-        else:
-            return
+        found = False
+        keys = list(launchOptions.keys())
+        for launchOption in keys:
+            if not found:
+                if launchOption == optionNumber:
+                    found = True
+            else:
+                newOptionNumber = str(int(launchOption) - 1)
+                self.set_data_from_section(
+                    appID,
+                    launchOptions[launchOption],
+                    "config",
+                    "launch",
+                    newOptionNumber,
+                )
+        del launchOptions[keys[-1]]
+        self.update_launch_menu_window(appID)
 
     def add_launch_option(self, appID):
         launchOptions = self.get_data_from_section(appID, "config", "launch")
@@ -1251,6 +1258,9 @@ class MainWindow:
 
         # read launch options and gather data
         appLaunchOptions = self.get_data_from_section(appID, "config", "launch")
+        if not appLaunchOptions:
+            self.ask_to_create_launch_option(appID)
+            return
 
         frameCount = 0
         for launchOption in appLaunchOptions.keys():
@@ -1899,5 +1909,5 @@ if __name__ == "__main__":
     except IncompatibleVDFError as e:
         messagebox.showerror(
             title="Invalid VDF Version",
-            message=f"VDF version {e.vdf_version:#08x} is not supported."
+            message=f"VDF version {e.vdf_version:#08x} is not supported.",
         )
