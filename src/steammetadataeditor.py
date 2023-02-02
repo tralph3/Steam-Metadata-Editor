@@ -1400,7 +1400,7 @@ class VDF:
         strEnd = self.appinfoData.find(self.INT_SEPARATOR, self.offset)
         try:
             string = self.appinfoData[self.offset : strEnd].decode("utf-8")
-        except:
+        except UnicodeDecodeError:
             # latin-1 == iso8859-1
             string = self.appinfoData[self.offset : strEnd].decode("latin-1")
             # control character used to determine encoding
