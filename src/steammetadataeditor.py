@@ -38,8 +38,11 @@ from copy import deepcopy
 from argparse import ArgumentParser
 import re
 
+# looks for "path"		"/some/path"
 PATH_REGEX = re.compile('"path"\t\t"(.*)"')
+# looks for "0213123"		"1395050123"
 APP_REGEX = re.compile('"([0-9]+)"\t\t"[0-9]+"')
+
 # defaults
 BG = "#23272c"
 FG = "#b8b6b4"
