@@ -28,7 +28,7 @@ import tkinter as tk
 from tkinter.ttk import Treeview, Style
 from tkinter import filedialog, messagebox
 from datetime import datetime
-from os import path, getcwd, getenv, _exit, makedirs
+from os import path, getenv, _exit, makedirs
 from pathlib import Path
 from platform import system
 from struct import pack, unpack
@@ -36,7 +36,12 @@ from json import load, dump, JSONDecodeError
 from configparser import ConfigParser
 from copy import deepcopy
 from argparse import ArgumentParser
-from glob import glob
+import re
+
+# looks for "path"		"/some/path"
+PATH_REGEX = re.compile('"path"\t\t"(.*)"')
+# looks for "0213123"		"1395050123"
+APP_REGEX = re.compile('"([0-9]+)"\t\t"[0-9]+"')
 
 # defaults
 BG = "#23272c"
@@ -73,9 +78,13 @@ if CURRENT_OS != "Windows":
 STEAM_PATH = None
 
 
+class IncompatibleVDFError(Exception):
+    def __init__(self, vdf_version):
+        self.vdf_version = vdf_version
+
+
 class MainWindow:
     def __init__(self, silent, export=None):
-
         self.modifiedApps = []
 
         if export is not None:
@@ -163,7 +172,9 @@ class MainWindow:
         self.leftFrame = tk.LabelFrame(
             self.window, padx=10, pady=10, bg=BG, text="Search:", fg=FG
         )
-        self.rightContainerFrame = tk.Frame(self.window, padx=10, pady=10, bg=BG)
+        self.rightContainerFrame = tk.Frame(
+            self.window, padx=10, pady=10, bg=BG
+        )
         # label specific
         self.rightIdFrame = tk.Frame(self.rightContainerFrame, bg=BG)
         self.rightNameFrame = tk.Frame(self.rightContainerFrame, bg=BG)
@@ -205,10 +216,12 @@ class MainWindow:
         self.appList.column("Type", width=50, minwidth=20)
         self.appList.column("Mod", width=55, minwidth=20)
         self.appList.column("ID", width=80, minwidth=80)
-        self.appList.bind("<ButtonRelease-1>", self.fetch_app_data)
+        self.appList.bind("<<TreeviewSelect>>", self.fetch_app_data)
 
         # right side
-        self.idLabel = tk.Label(self.rightIdFrame, text="ID:", font=FONT, bg=BG, fg=FG)
+        self.idLabel = tk.Label(
+            self.rightIdFrame, text="ID:", font=FONT, bg=BG, fg=FG
+        )
         self.idEntry = tk.Entry(
             self.rightIdFrame,
             width=40,
@@ -244,7 +257,11 @@ class MainWindow:
         )
 
         self.developerLabel = tk.Label(
-            self.rightDeveloperFrame, text="Developer:", font=FONT, bg=BG, fg=FG
+            self.rightDeveloperFrame,
+            text="Developer:",
+            font=FONT,
+            bg=BG,
+            fg=FG,
         )
         self.developerEntry = tk.Entry(
             self.rightDeveloperFrame,
@@ -256,7 +273,11 @@ class MainWindow:
         )
 
         self.publisherLabel = tk.Label(
-            self.rightPublisherFrame, text="Publisher:", font=FONT, bg=BG, fg=FG
+            self.rightPublisherFrame,
+            text="Publisher:",
+            font=FONT,
+            bg=BG,
+            fg=FG,
         )
         self.publisherEntry = tk.Entry(
             self.rightPublisherFrame,
@@ -401,12 +422,20 @@ class MainWindow:
         self.leftFrame.pack(side="left", fill="both")
         self.rightContainerFrame.pack(side="right", fill="both")
 
-        self.rightIdFrame.pack(side="top", fill="both", pady=(0, ENTRY_PADDING))
+        self.rightIdFrame.pack(
+            side="top", fill="both", pady=(0, ENTRY_PADDING)
+        )
         self.rightNameFrame.pack(side="top", fill="both", pady=ENTRY_PADDING)
         self.rightSortAsFrame.pack(side="top", fill="both", pady=ENTRY_PADDING)
-        self.rightDeveloperFrame.pack(side="top", fill="both", pady=ENTRY_PADDING)
-        self.rightPublisherFrame.pack(side="top", fill="both", pady=ENTRY_PADDING)
-        self.rightOgReleaseFrame.pack(side="top", fill="both", pady=ENTRY_PADDING)
+        self.rightDeveloperFrame.pack(
+            side="top", fill="both", pady=ENTRY_PADDING
+        )
+        self.rightPublisherFrame.pack(
+            side="top", fill="both", pady=ENTRY_PADDING
+        )
+        self.rightOgReleaseFrame.pack(
+            side="top", fill="both", pady=ENTRY_PADDING
+        )
         self.rightSteamReleaseFrame.pack(
             side="top", fill="both", pady=(ENTRY_PADDING, 0)
         )
@@ -433,63 +462,32 @@ class MainWindow:
     def mark_installed_games(self):
         lbryPath = path.join(STEAM_PATH, "steamapps", "libraryfolders.vdf")
         with open(lbryPath, "r") as libraries:
-            libraries = self.parse_library_folders(libraries.read())
+            contents = libraries.read()
+            libraries = PATH_REGEX.findall(contents)
+            apps = [int(x) for x in APP_REGEX.findall(contents)]
 
-        for library in libraries.values():
-            appIDs = [
-                acf.replace(library, "")[1:]
-                for acf in glob(path.join(library, "*.acf"))
-            ]
-            appIDs = [
-                int(acf.replace("appmanifest_", "").replace(".acf", ""))
-                for acf in appIDs
-            ]
-
-            for app in appIDs:
-                self.appInfoVdf.parsedAppInfo[app]["installed"] = True
-                self.appInfoVdf.parsedAppInfo[app]["installDir"] = path.join(
-                    library,
-                    "common",
-                    str(self.get_data_from_section(app, "config", "installdir")),
+        for library in libraries:
+            for app in apps:
+                install_dir = self.get_data_from_section(
+                    app, "config", "installdir"
                 )
-
-    def parse_library_folders(self, data):
-        # delete all irrelevant characters
-        data = (
-            data.replace("\t", "")
-            .replace("\n", "")
-            .replace('"LibraryFolders"', "")
-            .replace("{", "")
-            .replace("}", "")
-        )
-
-        # remove first and last character because they are trailing quotes
-        parsedData = data[1:-1].split('""')
-        lbryDict = {}
-        lbryDict["0"] = path.join(STEAM_PATH, "steamapps")
-
-        for key, value in zip(*[iter(parsedData)] * 2):
-            lbryDict[key] = path.join(value, "steamapps")
-
-        # sometimes these are missing
-        if "TimeNextStatsReport" in lbryDict.keys():
-            del lbryDict["TimeNextStatsReport"]
-
-        if "ContentStatsID" in lbryDict.keys():
-            del lbryDict["ContentStatsID"]
-
-        return lbryDict
+                install_path = path.join(
+                    library, "steamapps", "common", install_dir
+                )
+                if not path.exists(install_path):
+                    continue
+                self.appInfoVdf.parsedAppInfo[app]["installed"] = True
+                self.appInfoVdf.parsedAppInfo[app]["install_path"] = install_path
 
     def write_json(self):
         with open(f"{CONFIG_PATH}/modifications.json", "w") as mod:
             for app in self.modifiedApps:
-                self.jsonData[str(app)]["modified"] = self.appInfoVdf.parsedAppInfo[
-                    app
-                ]["sections"]
+                self.jsonData[str(app)][
+                    "modified"
+                ] = self.appInfoVdf.parsedAppInfo[app]["sections"]
             dump(self.jsonData, mod, indent=2)
 
     def save_original_data(self, appID):
-
         appData = deepcopy(self.appInfoVdf.parsedAppInfo[appID]["sections"])
         self.jsonData[str(appID)] = {}
         self.jsonData[str(appID)]["original"] = appData
@@ -506,7 +504,6 @@ class MainWindow:
             self.jsonData = {}
 
     def get_data_from_section(self, appID, *sections, error=""):
-
         data = self.appInfoVdf.parsedAppInfo[appID]["sections"]["appinfo"]
         for section in sections:
             try:
@@ -519,7 +516,6 @@ class MainWindow:
     # given a var, it removes the callback, sets the value
     # and reassigns the callback
     def set_var_no_callback(self, var, value, callback):
-
         try:
             callbackId = var.trace_vinfo()[0][1]
             var.trace_remove("write", callbackId)
@@ -530,7 +526,6 @@ class MainWindow:
         var.trace_add("write", callback)
 
     def set_data_from_section(self, appID, value, *sections):
-
         appID = int(appID)
 
         if appID not in self.modifiedApps:
@@ -539,7 +534,7 @@ class MainWindow:
 
         data = self.appInfoVdf.parsedAppInfo[appID]["sections"]["appinfo"]
         # access all but the last element
-        for section in sections[0 : len(sections) - 1]:
+        for section in sections[0:len(sections) - 1]:
             try:
                 data = data[section]
             except KeyError:
@@ -552,7 +547,6 @@ class MainWindow:
         return int(datetime(year, month, day).timestamp())
 
     def set_timestamps(self, stampId):
-
         appID = int(self.idVar.get())
 
         def validate_date_format(year, month, day):
@@ -600,7 +594,6 @@ class MainWindow:
                 )
 
     def write_data_to_appinfo(self, notice=True):
-
         self.write_json()
 
         for app in self.modifiedApps:
@@ -615,7 +608,6 @@ class MainWindow:
             )
 
     def revert_app(self, appID):
-
         appID = int(appID)
 
         if appID in self.modifiedApps:
@@ -648,34 +640,25 @@ class MainWindow:
                 self.populate_app_list()
 
     def fetch_app_data(self, _event):
-
         # data from list
         currentItem = self.appList.focus()
         currentItemData = self.appList.item(currentItem)
         appID = currentItemData["values"][-1]
-        appType = currentItemData["values"][0]
         # fetched data
         appName = self.get_data_from_section(appID, "common", "name")
         appSortAs = self.get_data_from_section(appID, "common", "sortas")
-        appDeveloper = self.get_data_from_section(appID, "extended", "developer")
-        appPublisher = self.get_data_from_section(appID, "extended", "publisher")
+        appDeveloper = self.get_data_from_section(
+            appID, "extended", "developer"
+        )
+        appPublisher = self.get_data_from_section(
+            appID, "extended", "publisher"
+        )
         appSteamReleaseDate = self.get_data_from_section(
             appID, "common", "steam_release_date"
         )
         appOgReleaseDate = self.get_data_from_section(
             appID, "common", "original_release_date"
         )
-        installed = self.appInfoVdf.parsedAppInfo[appID]["installed"]
-
-        if (
-            appType.lower() == "application"
-            or appType.lower() == "game"
-            or appType.lower() == "tool"
-            or appType.lower() == "demo"
-        ) and installed:
-            self.launchMenuButton.configure(state="normal")
-        else:
-            self.launchMenuButton.configure(state="disabled")
 
         if not appSteamReleaseDate:
             appSteamReleaseDate = 0
@@ -784,11 +767,13 @@ class MainWindow:
 
     def insert_app_in_list(self, app):
         self.appList.insert(
-            parent="", index="end", text=app[0], values=(app[1], app[2], app[3])
+            parent="",
+            index="end",
+            text=app[0],
+            values=(app[1], app[2], app[3]),
         )
 
     def locate_app_in_list(self):
-
         query = self.searchBar.get().lower()
 
         # clear list to fill it with results
@@ -803,7 +788,6 @@ class MainWindow:
             self.populate_app_list()
 
     def center_window(self, window):
-
         screenWidth = window.winfo_screenwidth()
         screenHeight = window.winfo_screenheight()
         windowWidth = window.winfo_reqwidth()
@@ -816,8 +800,19 @@ class MainWindow:
             f"{windowWidth}x{windowHeight}+" + f"{int(windowX)}+{int(windowY)}"
         )
 
-    def move_launch_option(self, appID, optionNumber, direction):
+    def ask_to_create_launch_option(self, appID):
+        self.launchMenuWindow.withdraw()
+        answer = messagebox.askyesno(
+            "No Launch Options",
+            "This app has no launch options. Do you wish to create one?",
+        )
+        if answer:
+            self.add_launch_option(appID)
+            self.launchMenuWindow.deiconify()
+        else:
+            self.launchMenuWindow.destroy()
 
+    def move_launch_option(self, appID, optionNumber, direction):
         launchOption = self.get_data_from_section(
             appID, "config", "launch", optionNumber
         )
@@ -829,7 +824,7 @@ class MainWindow:
                 appID, "config", "launch", newOptionNumber, error=False
             )
 
-            if nextLaunchOption != False:
+            if nextLaunchOption is not False:
                 self.set_data_from_section(
                     appID, nextLaunchOption, "config", "launch", optionNumber
                 )
@@ -846,7 +841,7 @@ class MainWindow:
                 appID, "config", "launch", newOptionNumber, error=False
             )
 
-            if prevLaunchOption != False:
+            if prevLaunchOption is not False:
                 self.set_data_from_section(
                     appID, prevLaunchOption, "config", "launch", optionNumber
                 )
@@ -860,35 +855,32 @@ class MainWindow:
             return
 
     def delete_launch_option(self, appID, optionNumber):
-
         launchOptions = self.get_data_from_section(appID, "config", "launch")
 
-        if len(launchOptions.keys()) > 1:
-            found = False
-            keys = list(launchOptions.keys())
-            for launchOption in keys:
-                if not found:
-                    if launchOption == optionNumber:
-                        found = True
-                else:
-                    newOptionNumber = str(int(launchOption) - 1)
-                    self.set_data_from_section(
-                        appID,
-                        launchOptions[launchOption],
-                        "config",
-                        "launch",
-                        newOptionNumber,
-                    )
-            del launchOptions[keys[-1]]
-            self.update_launch_menu_window(appID)
-        else:
-            return
+        found = False
+        keys = list(launchOptions.keys())
+        for launchOption in keys:
+            if not found:
+                if launchOption == optionNumber:
+                    found = True
+            else:
+                newOptionNumber = str(int(launchOption) - 1)
+                self.set_data_from_section(
+                    appID,
+                    launchOptions[launchOption],
+                    "config",
+                    "launch",
+                    newOptionNumber,
+                )
+        del launchOptions[keys[-1]]
+        self.update_launch_menu_window(appID)
 
     def add_launch_option(self, appID):
-
         launchOptions = self.get_data_from_section(appID, "config", "launch")
         newEntryNumber = str(len(launchOptions))
-        self.set_data_from_section(appID, {}, "config", "launch", newEntryNumber)
+        self.set_data_from_section(
+            appID, {}, "config", "launch", newEntryNumber
+        )
 
         self.update_launch_menu_window(appID)
 
@@ -927,26 +919,27 @@ class MainWindow:
                 parentFolders = len(steamDir) - index
                 break
 
-        if parentFolders != None:
+        if parentFolders is not None:
             return "../" * parentFolders + "/".join(execDir[index:])
         elif execDir[index:] == steamDir[index]:
             return ""
         else:
-            return "/".join(execDir[index + 1 :])
+            return "/".join(execDir[index + 1:])
 
-    def generate_launch_option_string(self, appID, execVar, wkngDirVar, pathType):
-
-        installDir = self.appInfoVdf.parsedAppInfo[appID]["installDir"]
+    def generate_launch_option_string(
+        self, appID, execVar, wkngDirVar, pathType
+    ):
+        install_path = self.appInfoVdf.parsedAppInfo[appID]["install_path"]
 
         if pathType == "exe":
 
             exePath = filedialog.askopenfilename(
-                parent=self.launchMenuWindow, initialdir=installDir
+                parent=self.launchMenuWindow, initialdir=install_path
             )
             if exePath == () or exePath == "":
                 return
 
-            exePath = self.calculate_parent_folders(exePath, appID, installDir)
+            exePath = self.calculate_parent_folders(exePath, appID, install_path)
 
             wkngDirPath = path.split(exePath)[0]
 
@@ -958,12 +951,14 @@ class MainWindow:
         elif pathType == "wkngDir":
 
             wkngDirPath = filedialog.askdirectory(
-                parent=self.launchMenuWindow, initialdir=installDir
+                parent=self.launchMenuWindow, initialdir=install_path
             )
             if wkngDirPath == () or wkngDirPath == "":
                 return
 
-            wkngDirPath = self.calculate_parent_folders(wkngDirPath, appID, installDir)
+            wkngDirPath = self.calculate_parent_folders(
+                wkngDirPath, appID, install_path
+            )
 
             if CURRENT_OS == "Windows":
                 wkngDirVar = wkngDirVar.replace("/", "\\")
@@ -999,7 +994,13 @@ class MainWindow:
         # frames
         padding = 20
         mainFrame = tk.LabelFrame(
-            frame, bg=BG, padx=padding, pady=padding, text=number, font=FONT, fg=FG
+            frame,
+            bg=BG,
+            padx=padding,
+            pady=padding,
+            text=number,
+            font=FONT,
+            fg=FG,
         )
         descFrame = tk.Frame(mainFrame, bg=BG, padx=padding)
         execFrame = tk.Frame(mainFrame, bg=BG, padx=padding)
@@ -1019,7 +1020,9 @@ class MainWindow:
         macVar = tk.BooleanVar()
 
         # widgets
-        descLabel = tk.Label(descFrame, text="Description:", font=FONT, bg=BG, fg=FG)
+        descLabel = tk.Label(
+            descFrame, text="Description:", font=FONT, bg=BG, fg=FG
+        )
         descEntry = tk.Entry(
             descFrame,
             bg=ENTRY_BG,
@@ -1029,7 +1032,9 @@ class MainWindow:
             width=60,
         )
 
-        execLabel = tk.Label(execFrame, text="Executable:", font=FONT, bg=BG, fg=FG)
+        execLabel = tk.Label(
+            execFrame, text="Executable:", font=FONT, bg=BG, fg=FG
+        )
         execEntry = tk.Entry(
             execFrame,
             readonlybackground=ENTRY_BG,
@@ -1079,7 +1084,9 @@ class MainWindow:
             ),
         )
 
-        argLabel = tk.Label(argFrame, text="Launch Arguments:", font=FONT, bg=BG, fg=FG)
+        argLabel = tk.Label(
+            argFrame, text="Launch Arguments:", font=FONT, bg=BG, fg=FG
+        )
         argEntry = tk.Entry(
             argFrame,
             bg=ENTRY_BG,
@@ -1224,7 +1231,12 @@ class MainWindow:
             wkngDirVar,
             wkngDir,
             lambda _a, _b, _c: self.set_data_from_section(
-                appID, wkngDirVar.get(), "config", "launch", number, "workingdir"
+                appID,
+                wkngDirVar.get(),
+                "config",
+                "launch",
+                number,
+                "workingdir",
             ),
         )
 
@@ -1253,7 +1265,6 @@ class MainWindow:
         ]
 
     def update_launch_menu_window(self, appID):
-
         # clear frame and store current scroll position
         scrollbarPosition = 0
         for widget in self.scrollFrame.scrollableFrame.winfo_children():
@@ -1261,7 +1272,12 @@ class MainWindow:
             widget.destroy()
 
         # read launch options and gather data
-        appLaunchOptions = self.get_data_from_section(appID, "config", "launch")
+        appLaunchOptions = self.get_data_from_section(
+            appID, "config", "launch"
+        )
+        if not appLaunchOptions:
+            self.ask_to_create_launch_option(appID)
+            return
 
         frameCount = 0
         for launchOption in appLaunchOptions.keys():
@@ -1332,13 +1348,14 @@ class MainWindow:
         self.scrollFrame.canvas.yview_moveto(scrollbarPosition)
 
     def create_launch_menu_window(self):
-
         appName = self.nameVar.get()
         appID = int(self.idVar.get())
 
         self.launchMenuWindow = tk.Toplevel(self.window)
         self.launchMenuWindow.resizable(False, False)
-        self.launchMenuWindow.title(f"Launch Menu Editor for {appName} ({appID})")
+        self.launchMenuWindow.title(
+            f"Launch Menu Editor for {appName} ({appID})"
+        )
 
         self.scrollFrame = ScrollableFrame(self.launchMenuWindow)
         self.scrollFrame.scrollableFrame.config(bg=BG, padx=20, pady=20)
@@ -1354,7 +1371,6 @@ class MainWindow:
         self.launchMenuWindow.mainloop()
 
     def populate_app_list(self):
-
         # get all aplications found in appinfo.vdf
         keys = list(self.appInfoVdf.parsedAppInfo.keys())
 
@@ -1379,10 +1395,9 @@ class MainWindow:
 
 class VDF:
     def __init__(self, chooseApps=False, apps=None):
+        self.offset = 0
 
-        # offset starts at 8 to skip the first 8 bytes
-        # which are the vdf's header
-        self.offset = 8
+        self.COMPATIBLE_VERSIONS = [0x107564428]
 
         self.SEPARATOR = b"\x00"
         self.TYPE_DICT = b"\x00"
@@ -1413,18 +1428,26 @@ class VDF:
     def read_string(self):
         strEnd = self.appinfoData.find(self.INT_SEPARATOR, self.offset)
         try:
-            string = self.appinfoData[self.offset : strEnd].decode("utf-8")
-        except:
+            string = self.appinfoData[self.offset:strEnd].decode("utf-8")
+        except UnicodeDecodeError:
             # latin-1 == iso8859-1
-            string = self.appinfoData[self.offset : strEnd].decode("latin-1")
+            string = self.appinfoData[self.offset:strEnd].decode("latin-1")
             # control character used to determine encoding
             string += "\x06"
         self.offset += strEnd - self.offset + 1
         return string
 
+    def read_int64(self):
+        int64 = unpack("<Q", self.appinfoData[self.offset:self.offset + 8])[
+            0
+        ]
+        self.offset += 8
+        return int64
+
     def read_int32(self):
-        int32 = unpack("<I", self.appinfoData[self.offset : self.offset + 4])[0]
-        # move offset past data
+        int32 = unpack("<I", self.appinfoData[self.offset:self.offset + 4])[
+            0
+        ]
         self.offset += 4
         return int32
 
@@ -1454,15 +1477,15 @@ class VDF:
         return subsection
 
     def read_header(self):
-
         keys = [
             "appid",
             "size",
             "state",
             "last_update",
             "access_token",
-            "checksum",
+            "checksum_text",
             "change_number",
+            "checksum_binary",
         ]
 
         formats = [
@@ -1473,23 +1496,30 @@ class VDF:
             ["<Q", 8],
             ["<20s", 20],
             ["<I", 4],
+            ["<20s", 20],
         ]
 
         headerData = {}
 
         for fmt, key in zip(formats, keys):
             value = unpack(
-                fmt[0], self.appinfoData[self.offset : self.offset + fmt[1]]
+                fmt[0], self.appinfoData[self.offset:self.offset + fmt[1]]
             )[0]
             self.offset += fmt[1]
             headerData[key] = value
 
         return headerData
 
+    def verify_vdf_version(self):
+        version = self.read_int64()
+        if version not in self.COMPATIBLE_VERSIONS:
+            raise IncompatibleVDFError(version)
+
     def read_app(self, appID):
         # all relevant apps will have a previous section ending before them
         # this ensures we are indeed getting an appid instead of some other
         # random number
+        self.verify_vdf_version()
         byteData = self.SECTION_END + pack("<I", appID)
         self.offset = self.appinfoData.find(byteData) + 1
         if self.offset == 0:
@@ -1498,9 +1528,11 @@ class VDF:
         app = self.read_header()
         app["sections"] = self.parse_subsections()
         app["installed"] = False
+        app["install_path"] = "."
         return app
 
     def read_all_apps(self):
+        self.verify_vdf_version()
         apps = {}
         # the last appid is 0 but there's no actual data for it,
         # we skip it by checking 4 less bytes to not get into
@@ -1509,20 +1541,21 @@ class VDF:
             app = self.read_header()
             app["sections"] = self.parse_subsections()
             app["installed"] = False
+            app["install_path"] = "."
             apps[app["appid"]] = app
         return apps
 
-    ### ENCODE DATA ###
     def encode_header(self, data):
         return pack(
-            "<4IQ20sI",
+            "<4IQ20sI20s",
             data["appid"],
             data["size"],
             data["state"],
             data["last_update"],
             data["access_token"],
-            data["checksum"],
+            data["checksum_text"],
             data["change_number"],
+            data["checksum_binary"],
         )
 
     def encode_string(self, string):
@@ -1553,34 +1586,39 @@ class VDF:
                 )
             elif type(value) == int:
                 encodedData += (
-                    self.TYPE_INT32 + self.encode_string(key) + self.encode_int(value)
+                    self.TYPE_INT32
+                    + self.encode_string(key)
+                    + self.encode_int(value)
                 )
 
         # if it got to this point, this particular dictionary ended
         encodedData += self.SECTION_END
         return encodedData
 
-    def get_checksum(self, data):
+    def get_text_checksum(self, data):
         formatted_data = self.format_data(data)
         hsh = sha1(formatted_data)
-
         return hsh.digest()
 
-    def update_size_and_checksum(self, header, size, checksum):
+    def get_binary_checksum(self, data):
+        hsh = sha1(data)
+        return hsh.digest()
+
+    def update_size_and_checksum(
+        self, header, size, checksum_text, checksum_binary
+    ):
         header = bytearray(header)
-        # replace size
         header[4:8] = pack("<I", size)
-        # replace checksum
-        header[24:44] = pack("<20s", checksum)
+        header[24:44] = pack("<20s", checksum_text)
+        header[48:68] = pack("<20s", checksum_binary)
 
         return header
 
     def update_app(self, appinfo):
-
         # encode new data
         header = self.encode_header(appinfo)
         sections = self.encode_subsections(appinfo["sections"])
-        checksum = self.get_checksum(appinfo["sections"])
+        checksum_text = self.get_text_checksum(appinfo["sections"])
         # appid and size don't count, so we skip them
         # by removing 8 bytes from the header
         size = len(sections) + len(header) - 8
@@ -1594,8 +1632,11 @@ class VDF:
 
         # use the stored size to determine the end of the app
         appEndLocation = appLocation + appinfo["size"] + 8
+        checksum_binary = self.get_binary_checksum(sections)
 
-        header = self.update_size_and_checksum(header, size, checksum)
+        header = self.update_size_and_checksum(
+            header, size, checksum_text, checksum_binary
+        )
 
         # replace the current app data with the new one
         if appLocation != -1:
@@ -1609,7 +1650,6 @@ class VDF:
             vdf.write(self.appinfoData)
 
     def format_data(self, data, numberOfTabs=0):
-
         """
         Formats a python dictionary into the vdf text format.
         """
@@ -1649,7 +1689,9 @@ class VDF:
                         + b'"'
                         + b"\t\t"
                         + b'"'
-                        + data[key][:-1].replace("\\", "\\\\").encode("latin-1")
+                        + data[key][:-1]
+                        .replace("\\", "\\\\")
+                        .encode("latin-1")
                         + b'"'
                         + b"\n"
                     )
@@ -1686,10 +1728,14 @@ class ScrollableFrame(tk.Frame):
 
         self.scrollableFrame.bind(
             "<Configure>",
-            lambda _e: self.canvas.configure(scrollregion=self.canvas.bbox("all")),
+            lambda _e: self.canvas.configure(
+                scrollregion=self.canvas.bbox("all")
+            ),
         )
 
-        self.canvas.create_window((0, 0), window=self.scrollableFrame, anchor="nw")
+        self.canvas.create_window(
+            (0, 0), window=self.scrollableFrame, anchor="nw"
+        )
 
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
         # X11
@@ -1702,7 +1748,6 @@ class ScrollableFrame(tk.Frame):
         self.scrollbar.pack(side="right", fill="y")
 
     def scroll_canvas(self, event):
-
         if event.num == 5 or event.delta < 0:
             direction = 1
         elif event.num == 4 or event.delta > 0:
@@ -1735,11 +1780,9 @@ class LoadingWindow(tk.Toplevel):
 
 
 def create_steam_path_window():
-
     finalPath = ""
 
     def set_steam_path():
-
         steamPath = filedialog.askdirectory()
         steamPath = Path(steamPath)
         steamPath = steamPath.resolve()
@@ -1747,7 +1790,6 @@ def create_steam_path_window():
         directoryEntry.insert(0, steamPath)
 
     def validate_path():
-
         if verify_steam_path(directoryEntry.get()):
             nonlocal finalPath
             finalPath = directoryEntry.get()
@@ -1780,7 +1822,9 @@ def create_steam_path_window():
     )
 
     directoryFrame = tk.Frame(window, bg=BG, pady=5)
-    directoryEntry = tk.Entry(directoryFrame, width=40, fg=ENTRY_FG, bg=ENTRY_BG)
+    directoryEntry = tk.Entry(
+        directoryFrame, width=40, fg=ENTRY_FG, bg=ENTRY_BG
+    )
     directoryButton = tk.Button(
         directoryFrame,
         text="...",
@@ -1831,7 +1875,6 @@ def create_steam_path_window():
 
 
 def verify_steam_path(steamPath):
-
     appinfoDirectory = path.join(steamPath, "appcache", "appinfo.vdf")
 
     if path.isdir(steamPath) and path.isfile(appinfoDirectory):
@@ -1841,7 +1884,6 @@ def verify_steam_path(steamPath):
 
 
 def get_steam_path():
-
     if "STEAMPATH" in config:
         if verify_steam_path(config.get("STEAMPATH", "Path")):
             return config.get("STEAMPATH", "Path")
@@ -1870,11 +1912,8 @@ def get_steam_path():
 
 
 if __name__ == "__main__":
-
     makedirs(CONFIG_PATH, exist_ok=True)
-
     if not path.isfile(f"{CONFIG_PATH}/config.cfg"):
-
         with open(f"{CONFIG_PATH}/config.cfg", "w"):
             pass
 
@@ -1899,7 +1938,12 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    mainWindow = MainWindow(silent=args.silent, export=args.export)
-
-    if not args.silent and args.export is None:
-        mainWindow.window.mainloop()
+    try:
+        mainWindow = MainWindow(silent=args.silent, export=args.export)
+        if not args.silent and args.export is None:
+            mainWindow.window.mainloop()
+    except IncompatibleVDFError as e:
+        messagebox.showerror(
+            title="Invalid VDF Version",
+            message=f"VDF version {e.vdf_version:#08x} is not supported.",
+        )
