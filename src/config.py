@@ -10,11 +10,6 @@ class Config:
     def __init__(self):
         self.set_default_variables()
 
-        if self.CURRENT_OS != "Windows":
-            self.HOME_DIR = os.getenv("HOME")
-            self.CONFIG_PATH = (
-                f"{self.HOME_DIR}/.local/share/Steam-Metadata-Editor/config"
-            )
 
         self.parse_arguments()
         self.ensure_config_file_exists()
@@ -60,6 +55,12 @@ class Config:
         self.CONFIG_PATH = "config"
         self.IMG_PATH = f"{os.path.dirname(__file__)}/gui/img"
 
+        if self.CURRENT_OS != "Windows":
+            self.HOME_DIR = os.getenv("HOME")
+            self.CONFIG_PATH = (
+                f"{self.HOME_DIR}/.local/share/Steam-Metadata-Editor/config"
+            )
+
         self.DEFAULT_STEAM_PATHS = {
             "Windows": "C:\\Program Files (x86)\\Steam",
             "Linux": f"{self.HOME_DIR}/.local/share/Steam",
@@ -101,12 +102,10 @@ class Config:
             self.config_parser.write(cfg)
 
     def get_steam_path(self):
-        if "STEAMPATH" not in self.config_parser:
-            return
-
-        steam_path = self.config_parser.get("STEAMPATH", "Path")
-        if self.verify_steam_path(steam_path):
-            return steam_path
+        if "STEAMPATH" in self.config_parser:
+            steam_path = self.config_parser.get("STEAMPATH", "Path")
+            if self.verify_steam_path(steam_path):
+                return steam_path
 
         steam_path = self.DEFAULT_STEAM_PATHS.get(self.CURRENT_OS)
         while not self.verify_steam_path(steam_path):
