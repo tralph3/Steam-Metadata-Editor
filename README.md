@@ -19,7 +19,7 @@ The Editor features an easy to use GUI that lets you edit the most important asp
 
 When you launch the program, you should see something like this (note that the list of games depends on what you own):
 
-![image](https://user-images.githubusercontent.com/41462117/216201913-6b1dacd8-3d43-464e-bee4-539ad7c86b1f.png)
+![layout](https://user-images.githubusercontent.com/41462117/224578779-c57cc9a4-4939-4766-8f6c-38491582fa5b.png)
 
 To modify a game, you simply have to click on the one you want, and do your editing. You can use the bar at the top of the list to search for the game you want. In this example, we will edit **Endless Space 2**:
 
