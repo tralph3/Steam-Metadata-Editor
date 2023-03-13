@@ -117,21 +117,22 @@ These entries are special, you can't use absolute paths here, you need to reach 
 
 * Linux
 
-Steam Metadata Editor can be installed from the [AUR](https://aur.archlinux.org/packages/steam-metadata-editor-git/).
+Steam Metadata Editor can be downloaded from [Flathub](https://flathub.org/apps/details/io.github.tralph3.Steam_Metadata_Editor). This is the easiest and most straightforward way to install it.
+
+It can also be installed from the [AUR](https://aur.archlinux.org/packages/steam-metadata-editor-git/).
 
     paru -Syu steam-metadata-editor-git
 
 If you are in an Ubuntu/Debian based distribution, you can download the source code and run the `make_deb.sh` script.
 
+    git clone https://github.com/tralph3/Steam-Metatada-Editor
+    cd Steam-Metatada-Editor
     ./make_deb.sh
+    sudo apt install ./Steam-Metadata-Editor.deb
 
 You may need to mark it as executable first:
 
     chmod +x make_deb.sh
-
-**The script must be ran on the project's root folder, make sure to cd into it.**
-
-The script will generate a `Steam-Metadata-Editor.deb` package in the root directory. Simply install it with `sudo apt install ./Steam-Metadata-Editor.deb`.
 
 Other Linux distributions can download the source code. The program needs Python3.6 or greater with the tk module.
 
