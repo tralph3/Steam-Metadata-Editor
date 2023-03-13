@@ -125,8 +125,8 @@ It can also be installed from the [AUR](https://aur.archlinux.org/packages/steam
 
 If you are in an Ubuntu/Debian based distribution, you can download the source code and run the `make_deb.sh` script.
 
-    git clone https://github.com/tralph3/Steam-Metatada-Editor
-    cd Steam-Metatada-Editor
+    git clone https://github.com/tralph3/Steam-Metadata-Editor
+    cd Steam-Metadata-Editor
     ./make_deb.sh
     sudo apt install ./Steam-Metadata-Editor.deb
 
