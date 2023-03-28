@@ -833,7 +833,6 @@ class MainWindow:
         install_path = self.appinfo.parsedAppInfo[appID]["install_path"]
 
         if pathType == "exe":
-
             exePath = filedialog.askopenfilename(
                 parent=self.launchMenuWindow, initialdir=install_path
             )
@@ -846,13 +845,13 @@ class MainWindow:
 
             wkngDirPath = os.path.split(exePath)[0]
 
-            execVar.set(exePath)
             if CURRENT_OS == "Windows":
-                wkngDirVar = wkngDirVar.replace("/", "\\")
+                exePath = exePath.replace("/", "\\")
+                wkngDirPath = wkngDirPath.replace("/", "\\")
+            execVar.set(exePath)
             wkngDirVar.set(wkngDirPath)
 
         elif pathType == "wkngDir":
-
             wkngDirPath = filedialog.askdirectory(
                 parent=self.launchMenuWindow, initialdir=install_path
             )
@@ -864,7 +863,7 @@ class MainWindow:
             )
 
             if CURRENT_OS == "Windows":
-                wkngDirVar = wkngDirVar.replace("/", "\\")
+                wkngDirPath = wkngDirPath.replace("/", "\\")
             wkngDirVar.set(wkngDirPath)
 
     def write_os_list(self, appID, winVar, macVar, linVar, launchOption):
