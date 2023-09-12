@@ -515,7 +515,7 @@ class MainWindow:
             if messagebox.askyesno(
                 title="Revert Game",
                 message="Are you "
-                + "sure you want to rever this game? All your "
+                + "sure you want to revert this game? All your "
                 + "modifications will be erased, this cannot be undone.",
             ):
 
