@@ -497,8 +497,8 @@ class MainWindow:
     def write_data_to_appinfo(self, notice=True):
         self.write_modifications()
 
-        for app in self.modifiedApps:
-            self.appinfo.update_app(self.appinfo.parsedAppInfo[app])
+        for appId in self.modifiedApps:
+            self.appinfo.update_app(appId)
 
         self.appinfo.write_data()
 
@@ -508,10 +508,10 @@ class MainWindow:
                 message="Your changes " + "have been successfully applied!",
             )
 
-    def revert_app(self, appID):
-        appID = int(appID)
+    def revert_app(self, appId):
+        appId = int(appId)
 
-        if appID in self.modifiedApps:
+        if appId in self.modifiedApps:
             if messagebox.askyesno(
                 title="Revert Game",
                 message="Are you "
@@ -520,20 +520,19 @@ class MainWindow:
             ):
 
                 # fetch original data and replace it
-                originalData = deepcopy(self.jsonData[str(appID)]["original"])
-                self.appinfo.parsedAppInfo[appID]["sections"] = originalData
+                originalData = deepcopy(self.jsonData[str(appId)]["original"])
+                self.appinfo.parsedAppInfo[appId]["sections"] = originalData
 
                 # delete app from modified apps
                 # to not save it in the json again
-                if appID in self.modifiedApps:
-                    self.modifiedApps.remove(appID)
+                if appId in self.modifiedApps:
+                    self.modifiedApps.remove(appId)
 
                 # delete data from json
-                del self.jsonData[str(appID)]
+                del self.jsonData[str(appId)]
                 self.write_modifications()
 
-                appinfo = self.appinfo.parsedAppInfo[appID]
-                self.appinfo.update_app(appinfo)
+                self.appinfo.update_app(appId)
                 self.appinfo.write_data()
 
                 # update app list

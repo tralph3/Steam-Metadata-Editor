@@ -59,13 +59,7 @@ class Appinfo:
 
     def read_string(self):
         strEnd = self.appinfoData.find(self.INT_SEPARATOR, self.offset)
-        try:
-            string = self.appinfoData[self.offset:strEnd].decode("utf-8")
-        except UnicodeDecodeError:
-            # latin-1 == iso8859-1
-            string = self.appinfoData[self.offset:strEnd].decode("latin-1")
-            # control character used to determine encoding
-            string += "\x06"
+        string = self.appinfoData[self.offset:strEnd].decode("utf-8")
         self.offset += strEnd - self.offset + 1
         return string
 
@@ -226,7 +220,7 @@ class Appinfo:
         return encodedData
 
     def get_text_checksum(self, data):
-        formatted_data = self.format_data(data)
+        formatted_data = self.dict_to_text_vdf(data)
         hsh = sha1(formatted_data)
         return hsh.digest()
 
@@ -234,51 +228,46 @@ class Appinfo:
         hsh = sha1(data)
         return hsh.digest()
 
-    def update_size_and_checksum(
-        self, header, size, checksum_text, checksum_binary
+    def update_header_size_and_checksums(
+        self, appinfo, size, checksum_text, checksum_binary
     ):
-        header = bytearray(header)
-        header[4:8] = pack("<I", size)
-        header[24:44] = pack("<20s", checksum_text)
-        header[48:68] = pack("<20s", checksum_binary)
+        appinfo["checksum_binary"] = checksum_binary
+        appinfo["checksum_text"] = checksum_text
+        appinfo["size"] = size
 
-        return header
+        return appinfo
 
-    def update_app(self, appinfo):
-        # encode new data
-        header = self.encode_header(appinfo)
-        sections = self.encode_subsections(appinfo["sections"])
+    def update_app(self, appId):
+        appinfo = self.parsedAppInfo[appId]
+        encodedSubsections = self.encode_subsections(appinfo["sections"])
+        oldHeader = self.encode_header(appinfo)
+
+        # appid and size fields don't count towards the total of the
+        # size field, so we skip them by removing 8 bytes from the
+        # header size
+        size = len(encodedSubsections) + len(oldHeader) - 8
         checksum_text = self.get_text_checksum(appinfo["sections"])
-        # appid and size don't count, so we skip them
-        # by removing 8 bytes from the header
-        size = len(sections) + len(header) - 8
+        checksum_binary = self.get_binary_checksum(encodedSubsections)
 
-        # find where the app is in the file
-        # based on the unmodified header
-        appLocation = self.appinfoData.find(header)
-        if appLocation == -1:
-            appID = pack("<I", appinfo["appid"])
-            appLocation = self.appinfoData.find(self.SECTION_END + appID)
-
-        # use the stored size to determine the end of the app
+        appLocation = self.appinfoData.find(oldHeader)
         appEndLocation = appLocation + appinfo["size"] + 8
-        checksum_binary = self.get_binary_checksum(sections)
 
-        header = self.update_size_and_checksum(
-            header, size, checksum_text, checksum_binary
+        self.parsedAppInfo[appId] = self.update_header_size_and_checksums(
+            appinfo, size, checksum_text, checksum_binary
         )
 
-        # replace the current app data with the new one
+        updatedHeader = self.encode_header(appinfo)
+
         if appLocation != -1:
-            self.appinfoData[appLocation:appEndLocation] = header + sections
+            self.appinfoData[appLocation:appEndLocation] = updatedHeader + encodedSubsections
         else:
-            self.appinfoData.extend(header + sections)
+            self.appinfoData.extend(updatedHeader + encodedSubsections)
 
     def write_data(self):
         with open(self.vdf_path, "wb") as vdf:
             vdf.write(self.appinfoData)
 
-    def format_data(self, data, numberOfTabs=0):
+    def dict_to_text_vdf(self, data, numberOfTabs=0):
         """
         Formats a python dictionary into the vdf text format.
         """
@@ -301,7 +290,7 @@ class Appinfo:
                     + tabs
                     + b"{"
                     + b"\n"
-                    + self.format_data(data[key], numberOfTabs)
+                    + self.dict_to_text_vdf(data[key], numberOfTabs)
                     + tabs
                     + b"}\n"
                 )
