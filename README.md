@@ -140,6 +140,26 @@ Other Linux distributions can download the source code. The program needs Python
 
 Download the source code and install python3.6 or greater. Make sure to install Tk/Tcl with it.
 
+* macOS
+
+You need Python3.6 or greater and Tkinter. You can install them with Brew.
+If you don't have it already, install Brew by typing in the terminal:
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+Then to install Python:
+Brew install Python3
+
+Then to install Tkinter:
+Brew install Tkinter
+
+Download the source of the Steam Metadata Editor, then navigate to its folder in the terminal:
+cd PATH/TO/FOLDER
+cd src
+
+then type this to launch the app:
+
+Python3 main.py
+
 ---
 
 ## How does it work?
