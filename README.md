@@ -148,11 +148,7 @@ If you don't have it already, install Brew by typing in the terminal:
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-Then to install Python:
-```
-brew install Python3
-```
-Then to install Tkinter:
+Then to install Python and Tkinter:
 ```
 brew install python-tk
 ```
