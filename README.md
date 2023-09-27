@@ -150,11 +150,11 @@ If you don't have it already, install Brew by typing in the terminal:
 
 Then to install Python:
 ```
-Brew install Python3
+brew install Python3
 ```
 Then to install Tkinter:
 ```
-Brew install Tkinter
+brew install python-tk
 ```
 
 Download the source of the Steam Metadata Editor, then navigate to its folder in the terminal:
