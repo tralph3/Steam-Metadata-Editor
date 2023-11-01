@@ -59,7 +59,10 @@ class Appinfo:
 
     def read_string(self):
         strEnd = self.appinfoData.find(self.INT_SEPARATOR, self.offset)
-        string = self.appinfoData[self.offset:strEnd].decode("utf-8")
+        try:
+            string = self.appinfoData[self.offset:strEnd].decode("utf-8")
+        except UnicodeDecodeError:
+            string = self.appinfoData[self.offset:strEnd].decode("latin-1")
         self.offset += strEnd - self.offset + 1
         return string
 
