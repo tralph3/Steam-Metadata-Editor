@@ -14,18 +14,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from utils import ask_steam_path
-from configparser import ConfigParser, ParsingError
-from argparse import ArgumentParser
 import re
 import os
 import platform
+from argparse import ArgumentParser
+from configparser import ConfigParser, ParsingError
+
+from utils import ask_steam_path
 
 
 class Config:
     def __init__(self):
         self.set_default_variables()
-
 
         self.parse_arguments()
         self.ensure_config_file_exists()
@@ -39,9 +39,9 @@ class Config:
         self.STEAM_PATH = self.get_steam_path()
 
     def set_default_variables(self):
-        # looks for "path"		"/some/path"
+        # Looks for "path"		"/some/path"
         self.PATH_REGEX = re.compile('"path"\t\t"(.*)"')
-        # looks for "0213123"		"1395050123"
+        # Looks for "0213123"		"1395050123"
         self.APP_REGEX = re.compile('"([0-9]+)"\t\t"[0-9]+"')
 
         self.BG = "#23272c"
