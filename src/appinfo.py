@@ -14,9 +14,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from struct import pack, unpack
-from hashlib import sha1
 import os
+from hashlib import sha1
+from struct import pack, unpack
 
 
 class IncompatibleVDFError(Exception):
@@ -25,7 +25,7 @@ class IncompatibleVDFError(Exception):
 
 
 class Appinfo:
-    def __init__(self, vdf_path, chooseApps=False, apps=None):
+    def __init__(self, vdf_path, choose_apps=False, apps=None):
         self.offset = 0
 
         self.vdf_path = vdf_path
@@ -49,8 +49,8 @@ class Appinfo:
 
         self.verify_vdf_version()
 
-        # load only the modified apps
-        if chooseApps:
+        # Load only the modified apps
+        if choose_apps:
             self.parsedAppInfo = {}
             for app in apps:
                 self.parsedAppInfo[app] = self.read_app(app)
@@ -58,12 +58,12 @@ class Appinfo:
             self.parsedAppInfo = self.read_all_apps()
 
     def read_string(self):
-        strEnd = self.appinfoData.find(self.INT_SEPARATOR, self.offset)
+        str_end = self.appinfoData.find(self.INT_SEPARATOR, self.offset)
         try:
-            string = self.appinfoData[self.offset:strEnd].decode("utf-8")
+            string = self.appinfoData[self.offset:str_end].decode("utf-8")
         except UnicodeDecodeError:
-            string = self.appinfoData[self.offset:strEnd].decode("latin-1")
-        self.offset += strEnd - self.offset + 1
+            string = self.appinfoData[self.offset:str_end].decode("latin-1")
+        self.offset += str_end - self.offset + 1
         return string
 
     def read_int64(self):
@@ -128,30 +128,30 @@ class Appinfo:
             ["<20s", 20],
         ]
 
-        headerData = {}
+        header_data = {}
 
         for fmt, key in zip(formats, keys):
             value = unpack(
                 fmt[0], self.appinfoData[self.offset:self.offset + fmt[1]]
             )[0]
             self.offset += fmt[1]
-            headerData[key] = value
+            header_data[key] = value
 
-        return headerData
+        return header_data
 
     def verify_vdf_version(self):
         version = self.read_int64()
         if version not in self.COMPATIBLE_VERSIONS:
             raise IncompatibleVDFError(version)
 
-    def read_app(self, appID):
-        # all relevant apps will have a previous section ending before them
-        # this ensures we are indeed getting an appid instead of some other
+    def read_app(self, app_id):
+        # All relevant apps will have a previous section ending before them
+        # This ensures we are indeed getting an appid instead of some other
         # random number
-        byteData = self.SECTION_END + pack("<I", appID)
-        self.offset = self.appinfoData.find(byteData) + 1
+        byte_data = self.SECTION_END + pack("<I", app_id)
+        self.offset = self.appinfoData.find(byte_data) + 1
         if self.offset == 0:
-            print(f"App {appID} not found")
+            print(f"App {app_id} not found")
             os._exit(2)
         app = self.read_header()
         app["sections"] = self.parse_subsections()
@@ -161,7 +161,7 @@ class Appinfo:
 
     def read_all_apps(self):
         apps = {}
-        # the last appid is 0 but there's no actual data for it,
+        # The last appid is 0 but there's no actual data for it,
         # we skip it by checking 4 less bytes to not get into
         # another loop that would raise exceptions
         while self.offset < len(self.appinfoData) - 4:
@@ -195,32 +195,31 @@ class Appinfo:
         return pack("<I", integer)
 
     def encode_subsections(self, data):
-        encodedData = bytearray()
+        encoded_data = bytearray()
 
         for key, value in data.items():
-
-            if type(value) == dict:
-                encodedData += (
+            if isinstance(value, dict):
+                encoded_data += (
                     self.TYPE_DICT
                     + self.encode_string(key)
                     + self.encode_subsections(value)
                 )
-            elif type(value) == str:
-                encodedData += (
+            elif isinstance(value, str):
+                encoded_data += (
                     self.TYPE_STRING
                     + self.encode_string(key)
                     + self.encode_string(value)
                 )
-            elif type(value) == int:
-                encodedData += (
+            elif isinstance(value, int):
+                encoded_data += (
                     self.TYPE_INT32
                     + self.encode_string(key)
                     + self.encode_int(value)
                 )
 
-        # if it got to this point, this particular dictionary ended
-        encodedData += self.SECTION_END
-        return encodedData
+        # If it got to this point, this particular dictionary ended
+        encoded_data += self.SECTION_END
+        return encoded_data
 
     def get_text_checksum(self, data):
         formatted_data = self.dict_to_text_vdf(data)
@@ -240,49 +239,49 @@ class Appinfo:
 
         return appinfo
 
-    def update_app(self, appId):
-        appinfo = self.parsedAppInfo[appId]
-        encodedSubsections = self.encode_subsections(appinfo["sections"])
-        oldHeader = self.encode_header(appinfo)
+    def update_app(self, app_id):
+        appinfo = self.parsedAppInfo[app_id]
+        encoded_subsections = self.encode_subsections(appinfo["sections"])
+        old_header = self.encode_header(appinfo)
 
         # appid and size fields don't count towards the total of the
         # size field, so we skip them by removing 8 bytes from the
         # header size
-        size = len(encodedSubsections) + len(oldHeader) - 8
+        size = len(encoded_subsections) + len(old_header) - 8
         checksum_text = self.get_text_checksum(appinfo["sections"])
-        checksum_binary = self.get_binary_checksum(encodedSubsections)
+        checksum_binary = self.get_binary_checksum(encoded_subsections)
 
-        appLocation = self.appinfoData.find(oldHeader)
-        appEndLocation = appLocation + appinfo["size"] + 8
+        app_location = self.appinfoData.find(old_header)
+        app_end_location = app_location + appinfo["size"] + 8
 
-        self.parsedAppInfo[appId] = self.update_header_size_and_checksums(
+        self.parsedAppInfo[app_id] = self.update_header_size_and_checksums(
             appinfo, size, checksum_text, checksum_binary
         )
 
-        updatedHeader = self.encode_header(appinfo)
+        updated_header = self.encode_header(appinfo)
 
-        if appLocation != -1:
-            self.appinfoData[appLocation:appEndLocation] = updatedHeader + encodedSubsections
+        if app_location != -1:
+            self.appinfoData[app_location:app_end_location] = updated_header + encoded_subsections
         else:
-            self.appinfoData.extend(updatedHeader + encodedSubsections)
+            self.appinfoData.extend(updated_header + encoded_subsections)
 
     def write_data(self):
         with open(self.vdf_path, "wb") as vdf:
             vdf.write(self.appinfoData)
 
-    def dict_to_text_vdf(self, data, numberOfTabs=0):
+    def dict_to_text_vdf(self, data, number_of_tabs=0):
         """
-        Formats a python dictionary into the vdf text format.
+        Formats a Python dictionary into the vdf text format.
         """
 
         formatted_data = b""
-        # set a string with a fixed number of tabs for this instance
-        tabs = b"\t" * numberOfTabs
+        # Set a string with a fixed number of tabs for this instance
+        tabs = b"\t" * number_of_tabs
 
-        # re-encode strings with their original encoding
+        # Re-encode strings with their original encoding
         for key in data.keys():
-            if type(data[key]) == dict:
-                numberOfTabs += 1
+            if isinstance(data[key], dict):
+                number_of_tabs += 1
 
                 formatted_data += (
                     tabs
@@ -293,16 +292,16 @@ class Appinfo:
                     + tabs
                     + b"{"
                     + b"\n"
-                    + self.dict_to_text_vdf(data[key], numberOfTabs)
+                    + self.dict_to_text_vdf(data[key], number_of_tabs)
                     + tabs
                     + b"}\n"
                 )
 
-                numberOfTabs -= 1
+                number_of_tabs -= 1
             else:
                 # \x06 character means the string was decoded with iso8859-1
-                # the character gets removed when encoding
-                if type(data[key]) == str and "\x06" in data[key]:
+                # The character gets removed when encoding
+                if isinstance(data[key], str) and "\x06" in data[key]:
                     formatted_data += (
                         tabs
                         + b'"'
