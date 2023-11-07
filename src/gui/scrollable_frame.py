@@ -14,8 +14,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from gui.widgets import Scrollbar, Frame
 import tkinter as tk
+
+from widgets import Scrollbar, Frame
 
 
 class ScrollableFrame(Frame):
@@ -44,7 +45,7 @@ class ScrollableFrame(Frame):
         # X11
         self.canvas.bind_all("<Button-4>", self.scroll_canvas)
         self.canvas.bind_all("<Button-5>", self.scroll_canvas)
-        # everything else
+        # Everything else
         self.canvas.bind_all("<MouseWheel>", self.scroll_canvas)
 
         self.canvas.pack(side="left", fill="both", expand=True)
