@@ -14,16 +14,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import os
+import json
 from copy import deepcopy
+from datetime import datetime
+from json import JSONDecodeError
+
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from tkinter.ttk import Treeview, Style
-from datetime import datetime
-from json import JSONDecodeError
-import json
-import os
 
 from config import config
+from appinfo import Appinfo
 
 from gui.widgets import (
     Frame,
@@ -34,23 +36,8 @@ from gui.widgets import (
     Entry,
     Checkbutton,
     Scrollbar,
+    ScrollableFrame,
 )
-from gui.scrollable_frame import ScrollableFrame
-from appinfo import Appinfo
-
-APP_REGEX = config.APP_REGEX
-BG = config.BG
-CURRENT_OS = config.CURRENT_OS
-CONFIG_PATH = config.CONFIG_PATH
-ENTRY_BG = config.ENTRY_BG
-ENTRY_FG = config.ENTRY_FG
-ENTRY_PADDING = config.ENTRY_PADDING
-ENTRY_RELIEF = config.ENTRY_RELIEF
-FG = config.FG
-FONT = config.FONT
-IMG_PATH = config.IMG_PATH
-PATH_REGEX = config.PATH_REGEX
-STEAM_PATH = config.STEAM_PATH
 
 
 class MainWindow:
@@ -96,44 +83,44 @@ class MainWindow:
                 ]["modified"]
 
     def create_main_window(self):
-        # define main window
+        # Define main window
         self.window = tk.Tk()
         self.window.title("Steam Metadata Editor")
         self.window.resizable(width=False, height=False)
-        self.window.config(padx=10, pady=10, bg=BG)
+        self.window.config(padx=10, pady=10, bg=config.BG)
 
-        # hide to show loading window
+        # Hide to show loading window
         self.window.withdraw()
         loadingWindow = LoadingWindow(self.window)
 
-        # load appinfo
+        # Load appinfo
         self.appinfo = Appinfo(self.vdf_path)
 
-        # button images
-        self.upArrowImage = tk.PhotoImage(file=f"{IMG_PATH}/UpArrow.png")
-        self.downArrowImage = tk.PhotoImage(file=f"{IMG_PATH}/DownArrow.png")
-        self.deleteImage = tk.PhotoImage(file=f"{IMG_PATH}/Delete.png")
+        # Button images
+        self.upArrowImage = tk.PhotoImage(file=f"{config.IMG_PATH}/UpArrow.png")
+        self.downArrowImage = tk.PhotoImage(file=f"{config.IMG_PATH}/DownArrow.png")
+        self.deleteImage = tk.PhotoImage(file=f"{config.IMG_PATH}/Delete.png")
 
-        # treeview style
+        # Treeview style
         self.treeviewStyle = Style()
         self.treeviewStyle.configure(
             "Treeview",
-            font=(FONT, 9),
-            background=ENTRY_BG,
-            foreground=ENTRY_FG,
-            fieldbackground=ENTRY_BG,
+            font=(config.FONT, 9),
+            background=config.ENTRY_BG,
+            foreground=config.ENTRY_FG,
+            fieldbackground=config.ENTRY_BG,
             rowheight=20,
-            relief=ENTRY_RELIEF,
+            relief=config.ENTRY_RELIEF,
         )
         self.treeviewStyle.configure(
             "Treeview.Heading",
-            font=(FONT, 10),
-            background=BG,
-            foreground=FG,
-            relief=ENTRY_RELIEF,
+            font=(config.FONT, 10),
+            background=config.BG,
+            foreground=config.FG,
+            relief=config.ENTRY_RELIEF,
         )
 
-        # string vars
+        # String vars
         self.idVar = tk.StringVar()
         self.nameVar = tk.StringVar()
         self.sortAsVar = tk.StringVar()
@@ -147,12 +134,12 @@ class MainWindow:
         self.steamRelease3Var = tk.StringVar()
         self.searchBarVar = tk.StringVar()
 
-        # layout setup
+        # Layout setup
         self.leftFrame = LabelFrame(
             self.window, padx=10, pady=10, text="Search:"
         )
         self.rightContainerFrame = Frame(self.window, padx=10, pady=10)
-        # label specific
+        # Label specific
         self.rightIdFrame = Frame(self.rightContainerFrame)
         self.rightNameFrame = Frame(self.rightContainerFrame)
         self.rightSortAsFrame = Frame(self.rightContainerFrame)
@@ -162,8 +149,7 @@ class MainWindow:
         self.rightSteamReleaseFrame = Frame(self.rightContainerFrame)
         self.buttonsFrame = Frame(self.rightContainerFrame)
 
-        # widgets
-        # left side
+        # Widgets (left side)
         self.searchBar = Entry(
             self.leftFrame,
             textvariable=self.searchBarVar,
@@ -186,7 +172,7 @@ class MainWindow:
         self.appList.column("ID", width=80, minwidth=80)
         self.appList.bind("<<TreeviewSelect>>", self.fetch_app_data)
 
-        # right side
+        # Widgets (right side)
         self.idLabel = Label(self.rightIdFrame, text="ID:")
         self.idEntry = Entry(
             self.rightIdFrame,
@@ -285,13 +271,12 @@ class MainWindow:
             command=self.write_data_to_appinfo,
         )
 
-        # pack widgets
-        # left side
+        # Pack widgets (left side)
         self.searchBar.pack(side="top", fill="both", pady=(0, 10))
         self.appListScrollbar.pack(side="right", fill="both")
         self.appList.pack(side="top", fill="both")
 
-        # right side
+        # Pack widgets (right side)
         self.idLabel.pack(side="left")
         self.idEntry.pack(side="right")
         self.nameLabel.pack(side="left")
@@ -317,30 +302,30 @@ class MainWindow:
         self.revertAppButton.pack(side="left")
         self.saveButton.pack(side="right")
 
-        # frames
+        # Frames
         self.leftFrame.pack(side="left", fill="both")
         self.rightContainerFrame.pack(side="right", fill="both")
 
         self.rightIdFrame.pack(
-            side="top", fill="both", pady=(0, ENTRY_PADDING)
+            side="top", fill="both", pady=(0, config.ENTRY_PADDING)
         )
-        self.rightNameFrame.pack(side="top", fill="both", pady=ENTRY_PADDING)
-        self.rightSortAsFrame.pack(side="top", fill="both", pady=ENTRY_PADDING)
+        self.rightNameFrame.pack(side="top", fill="both", pady=config.ENTRY_PADDING)
+        self.rightSortAsFrame.pack(side="top", fill="both", pady=config.ENTRY_PADDING)
         self.rightDeveloperFrame.pack(
-            side="top", fill="both", pady=ENTRY_PADDING
+            side="top", fill="both", pady=config.ENTRY_PADDING
         )
         self.rightPublisherFrame.pack(
-            side="top", fill="both", pady=ENTRY_PADDING
+            side="top", fill="both", pady=config.ENTRY_PADDING
         )
         self.rightOgReleaseFrame.pack(
-            side="top", fill="both", pady=ENTRY_PADDING
+            side="top", fill="both", pady=config.ENTRY_PADDING
         )
         self.rightSteamReleaseFrame.pack(
-            side="top", fill="both", pady=(ENTRY_PADDING, 0)
+            side="top", fill="both", pady=(config.ENTRY_PADDING, 0)
         )
         self.buttonsFrame.pack(side="bottom", fill="both")
 
-        # extra config
+        # Extra config
         self.appList.config(yscrollcommand=self.appListScrollbar.set)
         self.appListScrollbar.config(command=self.appList.yview)
 
@@ -348,22 +333,22 @@ class MainWindow:
         self.mark_installed_games()
         self.populate_app_list()
 
-        # destroy loading window and show main one
+        # Destroy loading window and show main one
         # after appinfo finishes loading
         loadingWindow.destroy()
         self.window.deiconify()
 
-        # center window
+        # Center window
         self.window.update()
         self.window.update_idletasks()
         self.center_window(self.window)
 
     def mark_installed_games(self):
-        lbryPath = os.path.join(STEAM_PATH, "steamapps", "libraryfolders.vdf")
+        lbryPath = os.path.join(config.STEAM_PATH, "steamapps", "libraryfolders.vdf")
         with open(lbryPath, "r") as libraries:
             contents = libraries.read()
-            libraries = PATH_REGEX.findall(contents)
-            apps = [int(x) for x in APP_REGEX.findall(contents)]
+            libraries = config.PATH_REGEX.findall(contents)
+            apps = [int(x) for x in config.APP_REGEX.findall(contents)]
 
         for library in libraries:
             for app in apps:
@@ -381,7 +366,7 @@ class MainWindow:
                 ] = install_path
 
     def write_modifications(self):
-        with open(f"{CONFIG_PATH}/modifications.json", "w") as mod:
+        with open(f"{config.CONFIG_PATH}/modifications.json", "w") as mod:
             for app in self.modifiedApps:
                 self.jsonData[str(app)][
                     "modified"
@@ -395,7 +380,7 @@ class MainWindow:
 
     def load_modifications(self):
         try:
-            with open(f"{CONFIG_PATH}/modifications.json", "r") as mod:
+            with open(f"{config.CONFIG_PATH}/modifications.json", "r") as mod:
                 self.jsonData = json.load(mod)
                 for app in self.jsonData:
                     app = int(app)
@@ -414,7 +399,7 @@ class MainWindow:
 
         return data
 
-    # given a var, it removes the callback, sets the value
+    # Given a var, it removes the callback, sets the value
     # and reassigns the callback
     def set_var_no_callback(self, var, value, callback):
         try:
@@ -434,7 +419,7 @@ class MainWindow:
             self.modifiedApps.append(appID)
 
         data = self.appinfo.parsedAppInfo[appID]["sections"]["appinfo"]
-        # access all but the last element
+        # Access all but the last element
         for section in sections[0:len(sections) - 1]:
             try:
                 data = data[section]
@@ -467,7 +452,7 @@ class MainWindow:
                 year = int(self.ogRelease1Var.get())
                 month = int(self.ogRelease2Var.get())
                 day = int(self.ogRelease3Var.get())
-            # this happens when the field is empty
+            # This happens when the field is empty
             except ValueError:
                 return
 
@@ -483,7 +468,7 @@ class MainWindow:
                 year = int(self.steamRelease1Var.get())
                 month = int(self.steamRelease2Var.get())
                 day = int(self.steamRelease3Var.get())
-            # this happens when the field is empty
+            # This happens when the field is empty
             except ValueError:
                 return
 
@@ -519,32 +504,32 @@ class MainWindow:
                 + "modifications will be erased, this cannot be undone.",
             ):
 
-                # fetch original data and replace it
+                # Fetch original data and replace it
                 originalData = deepcopy(self.jsonData[str(appId)]["original"])
                 self.appinfo.parsedAppInfo[appId]["sections"] = originalData
 
-                # delete app from modified apps
+                # Delete app from modified apps
                 # to not save it in the json again
                 if appId in self.modifiedApps:
                     self.modifiedApps.remove(appId)
 
-                # delete data from json
+                # Delete data from json
                 del self.jsonData[str(appId)]
                 self.write_modifications()
 
                 self.appinfo.update_app(appId)
                 self.appinfo.write_data()
 
-                # update app list
+                # Update app list
                 self.appList.delete(*self.appList.get_children())
                 self.populate_app_list()
 
     def fetch_app_data(self, _event):
-        # data from list
+        # Data from list
         currentItem = self.appList.focus()
         currentItemData = self.appList.item(currentItem)
         appID = currentItemData["values"][-1]
-        # fetched data
+        # Fetched data
         appName = self.get_data_from_section(appID, "common", "name")
         appSortAs = self.get_data_from_section(appID, "common", "sortas")
         appDeveloper = self.get_data_from_section(
@@ -676,7 +661,7 @@ class MainWindow:
     def locate_app_in_list(self):
         query = self.searchBar.get().lower()
 
-        # clear list to fill it with results
+        # Clear list to fill it with results
         self.appList.delete(*self.appList.get_children())
 
         if query:
@@ -684,7 +669,7 @@ class MainWindow:
                 if query in app[0].lower():
                     self.insert_app_in_list(app)
         else:
-            # update app list
+            # Update app list
             self.populate_app_list()
 
     def center_window(self, window):
@@ -719,9 +704,9 @@ class MainWindow:
 
         if direction == "up":
             newOptionNumber = str(int(optionNumber) - 1)
-            # check if the location exists
+            # Check if the location exists
             nextLaunchOption = self.get_data_from_section(
-                appID, "config", "launch", newOptionNumber, error=False
+                appID, "config", "launch", newOptionNumber
             )
 
             if nextLaunchOption is not False:
@@ -736,9 +721,9 @@ class MainWindow:
             self.update_launch_menu_window(appID)
         elif direction == "down":
             newOptionNumber = str(int(optionNumber) + 1)
-            # check if the location exists
+            # Check if the location exists
             prevLaunchOption = self.get_data_from_section(
-                appID, "config", "launch", newOptionNumber, error=False
+                appID, "config", "launch", newOptionNumber
             )
 
             if prevLaunchOption is not False:
@@ -796,12 +781,12 @@ class MainWindow:
                 allparts.insert(0, parts[1])
         return allparts
 
-    def calculate_parent_folders(self, executablePath, appID, steamDir):
-        # splits all folders in the path into strings
+    def calculate_parent_folders(self, executablePath, steamDir):
+        # Splits all folders in the path into strings
         steamDir = self.split_directory(steamDir)
         execDir = self.split_directory(executablePath)
 
-        if CURRENT_OS == "Windows":
+        if config.CURRENT_OS == "Windows":
             del steamDir[0]
             del execDir[0]
 
@@ -813,7 +798,7 @@ class MainWindow:
         parentFolders = None
 
         for index, folder in enumerate(steamDir):
-            # count how many folders are needed to reach the earliest common
+            # Count how many folders are needed to reach the earliest common
             # parent folder
             if index == len(execDir) or folder != execDir[index]:
                 parentFolders = len(steamDir) - index
@@ -835,16 +820,16 @@ class MainWindow:
             exePath = filedialog.askopenfilename(
                 parent=self.launchMenuWindow, initialdir=install_path
             )
-            if exePath == () or exePath == "":
+            if not exePath:
                 return
 
             exePath = self.calculate_parent_folders(
-                exePath, appID, install_path
+                exePath, install_path
             )
 
             wkngDirPath = os.path.split(exePath)[0]
 
-            if CURRENT_OS == "Windows":
+            if config.CURRENT_OS == "Windows":
                 exePath = exePath.replace("/", "\\")
                 wkngDirPath = wkngDirPath.replace("/", "\\")
             execVar.set(exePath)
@@ -854,14 +839,14 @@ class MainWindow:
             wkngDirPath = filedialog.askdirectory(
                 parent=self.launchMenuWindow, initialdir=install_path
             )
-            if wkngDirPath == () or wkngDirPath == "":
+            if not wkngDirPath:
                 return
 
             wkngDirPath = self.calculate_parent_folders(
-                wkngDirPath, appID, install_path
+                wkngDirPath, install_path
             )
 
-            if CURRENT_OS == "Windows":
+            if config.CURRENT_OS == "Windows":
                 wkngDirPath = wkngDirPath.replace("/", "\\")
             wkngDirVar.set(wkngDirPath)
 
@@ -892,7 +877,7 @@ class MainWindow:
         platforms,
     ):
 
-        # frames
+        # Frames
         padding = 20
         mainFrame = LabelFrame(
             frame,
@@ -907,7 +892,7 @@ class MainWindow:
         platformFrame = Frame(mainFrame, padx=padding)
         buttonsFrame = Frame(mainFrame, padx=padding)
 
-        # string vars
+        # String vars
         descVar = tk.StringVar()
         wkngDirVar = tk.StringVar()
         execVar = tk.StringVar()
@@ -917,7 +902,7 @@ class MainWindow:
         linVar = tk.BooleanVar()
         macVar = tk.BooleanVar()
 
-        # widgets
+        # Widgets
         descLabel = Label(descFrame, text="Description:")
         descEntry = Entry(
             descFrame,
@@ -962,7 +947,7 @@ class MainWindow:
             width=60,
         )
 
-        # platform checkbuttons
+        # Platform checkbuttons
         winCheck = Checkbutton(
             platformFrame,
             text="Windows",
@@ -995,7 +980,7 @@ class MainWindow:
             command=lambda: self.move_launch_option(appID, number, "down"),
         )
 
-        # pack widgets
+        # Pack widgets
         descLabel.pack(side="left", fill="both")
         descEntry.pack(side="right", fill="both")
 
@@ -1018,8 +1003,8 @@ class MainWindow:
         downButton.pack(side="right")
         upButton.pack(side="right")
 
-        # pack frames
-        mainFrame.pack(expand="yes")
+        # Pack frames
+        mainFrame.pack(expand=True)
         descFrame.pack(side="top", fill="both", pady=(padding, 0))
         execFrame.pack(side="top", fill="both")
         wkngDirFrame.pack(side="top", fill="both")
@@ -1027,7 +1012,7 @@ class MainWindow:
         platformFrame.pack(side="top")
         buttonsFrame.pack(side="top", fill="both", pady=(0, padding))
 
-        # insert data
+        # Insert data
         for platform in platforms.split(","):
             if platform == "windows":
                 winVar.set(True)
@@ -1092,7 +1077,7 @@ class MainWindow:
             ),
         )
 
-        # update to return correct values
+        # Update to return correct values
         mainFrame.update()
         return [
             mainFrame.winfo_reqwidth() + padding,
@@ -1101,13 +1086,13 @@ class MainWindow:
         ]
 
     def update_launch_menu_window(self, appID):
-        # clear frame and store current scroll position
+        # Clear frame and store current scroll position
         scrollbarPosition = 0
         for widget in self.scrollFrame.scrollableFrame.winfo_children():
             scrollbarPosition = self.scrollFrame.scrollbar.get()[0]
             widget.destroy()
 
-        # read launch options and gather data
+        # Read launch options and gather data
         appLaunchOptions = self.get_data_from_section(
             appID, "config", "launch"
         )
@@ -1153,7 +1138,7 @@ class MainWindow:
             if frameCount < 2:
                 frameCount += 1
 
-        # add widgets for adding new entries
+        # Add widgets for adding new entries
         newEntryFrame = Frame(self.scrollFrame.scrollableFrame)
         newEntryButton = Button(
             newEntryFrame,
@@ -1165,7 +1150,7 @@ class MainWindow:
         newEntryButton.pack(side="top", anchor="n")
         newEntryFrame.pack(side="bottom", pady=(padding, 0))
 
-        # offsets size of scrollbar and
+        # Offsets size of scrollbar and
         # takes padding (geometry[2]) into account
         self.scrollFrame.scrollbar.update()
         geometry[0] += self.scrollFrame.scrollbar.winfo_reqwidth()
@@ -1173,7 +1158,7 @@ class MainWindow:
         geometry[1] += geometry[2] * 2
         geometry[1] += newEntryFrame.winfo_reqheight() + padding
 
-        # resizes window depending on the number of launch options
+        # Resizes window depending on the number of launch options
         self.scrollFrame.canvas.config(width=geometry[0], height=geometry[1])
         self.scrollFrame.canvas.yview_moveto(scrollbarPosition)
 
@@ -1188,7 +1173,7 @@ class MainWindow:
         )
 
         self.scrollFrame = ScrollableFrame(self.launchMenuWindow)
-        self.scrollFrame.scrollableFrame.config(bg=BG, padx=20, pady=20)
+        self.scrollFrame.scrollableFrame.config(bg=config.BG, padx=20, pady=20)
 
         self.update_launch_menu_window(appID)
 
@@ -1196,12 +1181,12 @@ class MainWindow:
 
         self.launchMenuWindow.update()
         self.center_window(self.launchMenuWindow)
-        # prevent the use of the main window while this one exists
+        # Prevent the use of the main window while this one exists
         self.launchMenuWindow.grab_set()
         self.launchMenuWindow.mainloop()
 
     def populate_app_list(self):
-        # get all aplications found in appinfo.vdf
+        # Get all applications found in appinfo.vdf
         keys = list(self.appinfo.parsedAppInfo.keys())
 
         self.appData = []
@@ -1211,12 +1196,12 @@ class MainWindow:
             appType = self.get_data_from_section(appID, "common", "type")
             modified = appID in self.modifiedApps
             appName = self.get_data_from_section(appID, "common", "name")
-            if appName == "" or appType == "":
+            if not appName or not appType:
                 pass
             else:
                 self.appData.append([str(appName), appType, modified, appID])
 
-        # sort case insensitive
+        # Sort case-insensitive
         self.appData.sort(key=lambda x: str(x[0]).lower())
 
         for app in self.appData:
@@ -1228,13 +1213,13 @@ class LoadingWindow(tk.Toplevel):
         tk.Toplevel.__init__(self, parent)
         self.title("Steam Metadata Editor (Loading)")
         self.resizable(width=False, height=False)
-        self.config(bg=BG)
+        self.config(bg=config.BG)
 
         self.loadingLabel = Label(self, text="Loading appinfo.vdf...")
 
         self.loadingLabel.pack(padx=30, pady=30)
 
-        # wait for widgets to actually load in
+        # Wait for widgets to actually load in
         # else they are sometimes not displayed,
 
         # TODO: Figure out why this hangs some systems

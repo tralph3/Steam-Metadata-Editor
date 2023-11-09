@@ -24,16 +24,17 @@
 ##################################
 
 from tkinter import messagebox
-from appinfo import IncompatibleVDFError
-from gui.main_window import MainWindow
+
 from config import config
+from gui.main_window import MainWindow
+from appinfo import IncompatibleVDFError
 
 
 def main():
     try:
-        mainWindow = MainWindow()
+        main_window = MainWindow()
         if not config.silent and config.export is None:
-            mainWindow.window.mainloop()
+            main_window.window.mainloop()
     except IncompatibleVDFError as e:
         messagebox.showerror(
             title="Invalid VDF Version",
