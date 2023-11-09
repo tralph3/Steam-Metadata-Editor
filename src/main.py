@@ -25,9 +25,9 @@
 
 from tkinter import messagebox
 
-from appinfo import IncompatibleVDFError
-from gui.main_window import MainWindow
 from config import config
+from gui.main_window import MainWindow
+from appinfo import IncompatibleVDFError
 
 
 def main():

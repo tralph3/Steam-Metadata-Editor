@@ -24,11 +24,10 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 from tkinter.ttk import Treeview, Style
 
-from src.config import config
-from src.appinfo import Appinfo
-from scrollable_frame import ScrollableFrame
+from config import config
+from appinfo import Appinfo
 
-from widgets import (
+from gui.widgets import (
     Frame,
     Button,
     DeleteButton,
@@ -37,6 +36,7 @@ from widgets import (
     Entry,
     Checkbutton,
     Scrollbar,
+    ScrollableFrame,
 )
 
 
