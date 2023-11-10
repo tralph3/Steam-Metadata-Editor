@@ -5,10 +5,15 @@ gi.require_version('Adw', '1')
 from gi.repository import Gtk, Gio
 from gui.objects import App
 
-class AppList(Gtk.ColumnView):
+class AppColumnView(Gtk.ColumnView):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.list_store = Gio.ListStore()
+        selection_model = Gtk.SingleSelection().new(model=self.list_store)
+        self.set_model(selection_model)
+        self.set_vexpand(True)
+        self.set_hexpand(True)
+        self.create_columns()
 
     def create_columns(self) -> None:
         name_column = Gtk.ColumnViewColumn()
@@ -17,7 +22,7 @@ class AppList(Gtk.ColumnView):
         name_factory.connect("setup", self._setup_name_factory)
         name_factory.connect("bind", self._bind_name_factory)
         name_column.set_factory(name_factory)
-        column_view.append_column(name_column)
+        self.append_column(name_column)
 
         id_column = Gtk.ColumnViewColumn()
         id_column.set_title("ID")
@@ -25,7 +30,7 @@ class AppList(Gtk.ColumnView):
         id_factory.connect("setup", self._setup_id_factory)
         id_factory.connect("bind", self._bind_id_factory)
         id_column.set_factory(id_factory)
-        column_view.append_column(id_column)
+        self.append_column(id_column)
 
         type_column = Gtk.ColumnViewColumn()
         type_column.set_title("Type")
@@ -33,7 +38,7 @@ class AppList(Gtk.ColumnView):
         type_factory.connect("setup", self._setup_type_factory)
         type_factory.connect("bind", self._bind_type_factory)
         type_column.set_factory(type_factory)
-        column_view.append_column(type_column)
+        self.append_column(type_column)
 
         installed_column = Gtk.ColumnViewColumn()
         installed_column.set_title("Installed")
@@ -41,7 +46,7 @@ class AppList(Gtk.ColumnView):
         installed_factory.connect("setup", self._setup_installed_factory)
         installed_factory.connect("bind", self._bind_installed_factory)
         installed_column.set_factory(installed_factory)
-        column_view.append_column(installed_column)
+        self.append_column(installed_column)
 
         modified_column = Gtk.ColumnViewColumn()
         modified_column.set_title("Modified")
@@ -49,7 +54,7 @@ class AppList(Gtk.ColumnView):
         modified_factory.connect("setup", self._setup_modified_factory)
         modified_factory.connect("bind", self._bind_modified_factory)
         modified_column.set_factory(modified_factory)
-        column_view.append_column(modified_column)
+        self.append_column(modified_column)
 
     def _setup_name_factory(self, _fact, item):
         label = Gtk.Label()
@@ -101,10 +106,9 @@ class AppList(Gtk.ColumnView):
         app = item.get_item()
         checkbutton.set_active(app.modified)
 
-
     def add_app(self, app: App) -> None:
         self.list_store.append(app)
 
-    def add_apps(self, apps: List[App]) -> None:
+    def add_apps(self, apps: list[App]) -> None:
         for app in apps:
             self.add_app(app)

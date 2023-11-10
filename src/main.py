@@ -26,15 +26,16 @@
 from tkinter import messagebox
 
 from config import config
-from gui.main_window import MainWindow
+from gui import View
 from appinfo import IncompatibleVDFError
+import sys
 
 
 def main():
     try:
-        main_window = MainWindow()
+        view = View(application_id="com.github.Metadata-Editor")
         if not config.silent and config.export is None:
-            main_window.window.mainloop()
+            view.run(sys.argv)
     except IncompatibleVDFError as e:
         messagebox.showerror(
             title="Invalid VDF Version",

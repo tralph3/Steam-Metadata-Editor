@@ -67,16 +67,12 @@ class Appinfo:
         return string
 
     def read_int64(self):
-        int64 = unpack("<Q", self.appinfoData[self.offset:self.offset + 8])[
-            0
-        ]
+        int64 = unpack("<Q", self.appinfoData[self.offset:self.offset + 8])[0]
         self.offset += 8
         return int64
 
     def read_int32(self):
-        int32 = unpack("<I", self.appinfoData[self.offset:self.offset + 4])[
-            0
-        ]
+        int32 = unpack("<I", self.appinfoData[self.offset:self.offset + 4])[0]
         self.offset += 4
         return int32
 

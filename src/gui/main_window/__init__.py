@@ -13,14 +13,10 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-import gi
-
-gi.require_version('Gtk', '4.0')
-gi.require_version('Adw', '1')
-from gi.repository import Gtk, Adw, Gio, Gdk, Graphene, GLib, GObject
-from app_list import AppList
+from gi.repository import Gtk
+from .app_list import AppColumnView
 from appinfo import Appinfo
+from gui.objects import App
 
 class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, *args, **kwargs):
@@ -31,4 +27,21 @@ class MainWindow(Gtk.ApplicationWindow):
         left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.set_child(left_box)
         appinfo = Appinfo("/home/tralph3/.local/share/Steam/appcache/appinfo.vdf")
-        left_box.append(AppList())
+        app_list = []
+        for app in list(appinfo.parsedAppInfo.keys())[3:]:
+            id = app
+            try:
+                name = appinfo.parsedAppInfo[id]["sections"]["appinfo"]["common"]["name"]
+            except KeyError:
+                continue
+            type = appinfo.parsedAppInfo[id]["sections"]["appinfo"]["common"]["type"]
+            installed = False
+            modified = False
+            app_list.append(App(name, id, type, installed, modified))
+        app_column_view = AppColumnView()
+        app_column_view.add_apps(app_list)
+        scrolled_window = Gtk.ScrolledWindow()
+        scrolled_window.set_child(app_column_view)
+        scrolled_window.set_hexpand(True)
+
+        left_box.append(scrolled_window)
