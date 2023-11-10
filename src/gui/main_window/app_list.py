@@ -2,8 +2,9 @@ import gi
 
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
-from gi.repository import Gtk, Gio
+from gi.repository import Gtk, Gio, Pango
 from gui.objects import App
+
 
 class AppColumnView(Gtk.ColumnView):
     def __init__(self, *args, **kwargs) -> None:
@@ -13,15 +14,17 @@ class AppColumnView(Gtk.ColumnView):
         self.set_model(selection_model)
         self.set_vexpand(True)
         self.set_hexpand(True)
-        self.create_columns()
+        self._create_columns()
 
-    def create_columns(self) -> None:
+    def _create_columns(self) -> None:
         name_column = Gtk.ColumnViewColumn()
         name_column.set_title("Name")
         name_factory = Gtk.SignalListItemFactory()
         name_factory.connect("setup", self._setup_name_factory)
         name_factory.connect("bind", self._bind_name_factory)
         name_column.set_factory(name_factory)
+        name_column.set_resizable(True)
+        name_column.set_fixed_width(400)
         self.append_column(name_column)
 
         id_column = Gtk.ColumnViewColumn()
@@ -30,6 +33,8 @@ class AppColumnView(Gtk.ColumnView):
         id_factory.connect("setup", self._setup_id_factory)
         id_factory.connect("bind", self._bind_id_factory)
         id_column.set_factory(id_factory)
+        id_column.set_fixed_width(80)
+        id_column.set_resizable(True)
         self.append_column(id_column)
 
         type_column = Gtk.ColumnViewColumn()
@@ -38,6 +43,7 @@ class AppColumnView(Gtk.ColumnView):
         type_factory.connect("setup", self._setup_type_factory)
         type_factory.connect("bind", self._bind_type_factory)
         type_column.set_factory(type_factory)
+        type_column.set_fixed_width(80)
         self.append_column(type_column)
 
         installed_column = Gtk.ColumnViewColumn()
@@ -59,6 +65,7 @@ class AppColumnView(Gtk.ColumnView):
     def _setup_name_factory(self, _fact, item):
         label = Gtk.Label()
         label.set_halign(Gtk.Align.START)
+        label.set_ellipsize(Pango.EllipsizeMode.END)
         item.set_child(label)
 
     def _bind_name_factory(self, _fact, item):

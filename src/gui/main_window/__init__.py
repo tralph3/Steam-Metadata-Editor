@@ -17,6 +17,7 @@ from gi.repository import Gtk
 from .app_list import AppColumnView
 from appinfo import Appinfo
 from gui.objects import App
+from utils import clean_string
 
 class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, *args, **kwargs):
@@ -28,20 +29,22 @@ class MainWindow(Gtk.ApplicationWindow):
         self.set_child(left_box)
         appinfo = Appinfo("/home/tralph3/.local/share/Steam/appcache/appinfo.vdf")
         app_list = []
-        for app in list(appinfo.parsedAppInfo.keys())[3:]:
+        for app in appinfo.parsedAppInfo.keys():
             id = app
             try:
                 name = appinfo.parsedAppInfo[id]["sections"]["appinfo"]["common"]["name"]
             except KeyError:
                 continue
-            type = appinfo.parsedAppInfo[id]["sections"]["appinfo"]["common"]["type"]
+            type = appinfo.parsedAppInfo[id]["sections"]["appinfo"]["common"]["type"].capitalize()
             installed = False
             modified = False
             app_list.append(App(name, id, type, installed, modified))
         app_column_view = AppColumnView()
+        app_list.sort(key=lambda app: clean_string(app.name))
         app_column_view.add_apps(app_list)
         scrolled_window = Gtk.ScrolledWindow()
         scrolled_window.set_child(app_column_view)
         scrolled_window.set_hexpand(True)
 
+        left_box.set_spacing(10)
         left_box.append(scrolled_window)

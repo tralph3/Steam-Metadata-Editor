@@ -26,5 +26,5 @@ def ask_steam_path():
     )
     return filedialog.askdirectory()
 
-def clean_string(self, string: str) -> str:
+def clean_string(string: str) -> str:
     return ''.join(char for char in string if char.isalnum())
