@@ -14,17 +14,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from tkinter import filedialog, messagebox
+import gi
 
+gi.require_version('Gtk', '4.0')
+gi.require_version('Adw', '1')
+from gi.repository import Gtk, Adw, Gio, Gdk, Graphene, GLib, GObject
+from app_list import AppList
+from appinfo import Appinfo
 
-def ask_steam_path():
-    messagebox.showinfo(
-        title="Can't locate Steam",
-        message="Steam couldn't be located in your system, "
-        + "or there's no \"appinfo.vdf\" file present. "
-        + "Please point to it's installation directory."
-    )
-    return filedialog.askdirectory()
+class MainWindow(Gtk.ApplicationWindow):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-def clean_string(self, string: str) -> str:
-    return ''.join(char for char in string if char.isalnum())
+        self.set_default_size(600, 250)
+        self.set_title("Steam-Metadata-Editor")
+        left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.set_child(left_box)
+        appinfo = Appinfo("/home/tralph3/.local/share/Steam/appcache/appinfo.vdf")
+        left_box.append(AppList())

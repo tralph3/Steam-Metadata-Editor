@@ -13,18 +13,23 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+import gi
 
-from tkinter import filedialog, messagebox
+gi.require_version('Gtk', '4.0')
+gi.require_version('Adw', '1')
+from gi.repository import GObject
 
+class App(GObject.Object):
+    name=GObject.Property(type=str, default="")
+    id=GObject.Property(type=int, default=-1)
+    installed=GObject.Property(type=bool, default=False)
+    type=GObject.Property(type=str, default="")
+    modified=GObject.Property(type=bool, default=False)
 
-def ask_steam_path():
-    messagebox.showinfo(
-        title="Can't locate Steam",
-        message="Steam couldn't be located in your system, "
-        + "or there's no \"appinfo.vdf\" file present. "
-        + "Please point to it's installation directory."
-    )
-    return filedialog.askdirectory()
-
-def clean_string(self, string: str) -> str:
-    return ''.join(char for char in string if char.isalnum())
+    def __init__(self, name: str, id: int, type: str, installed: bool, modified: bool) -> None:
+        super().__init__()
+        self.name = name
+        self.id = id
+        self.type = type
+        self.installed = installed
+        self.modified = modified
