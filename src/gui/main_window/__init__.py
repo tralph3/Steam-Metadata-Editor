@@ -27,6 +27,9 @@ class MainWindow(Gtk.ApplicationWindow):
         self.set_title("Steam-Metadata-Editor")
         left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.set_child(left_box)
+        search_entry = Gtk.SearchEntry()
+        search_entry.connect("search-changed", self.on_search_changed)
+        left_box.append(search_entry)
         appinfo = Appinfo("/home/tralph3/.local/share/Steam/appcache/appinfo.vdf")
         app_list = []
         for app in appinfo.parsedAppInfo.keys():
@@ -39,12 +42,16 @@ class MainWindow(Gtk.ApplicationWindow):
             installed = False
             modified = False
             app_list.append(App(name, id, type, installed, modified))
-        app_column_view = AppColumnView()
+        self.app_column_view = AppColumnView()
         app_list.sort(key=lambda app: clean_string(app.name))
-        app_column_view.add_apps(app_list)
+        self.app_column_view.add_apps(app_list)
         scrolled_window = Gtk.ScrolledWindow()
-        scrolled_window.set_child(app_column_view)
+        scrolled_window.set_child(self.app_column_view)
         scrolled_window.set_hexpand(True)
 
         left_box.set_spacing(10)
         left_box.append(scrolled_window)
+
+    def on_search_changed(self, entry: Gtk.SearchEntry):
+        search_query = entry.get_text()
+        self.app_column_view.filter_apps_by_name(search_query)

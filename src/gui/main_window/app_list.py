@@ -4,17 +4,33 @@ gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 from gi.repository import Gtk, Gio, Pango
 from gui.objects import App
+from utils import clean_string
 
 
 class AppColumnView(Gtk.ColumnView):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
+        self.search_query = ""
+
         self.list_store = Gio.ListStore()
-        selection_model = Gtk.SingleSelection().new(model=self.list_store)
+
+        filter_model = Gtk.CustomFilter().new(match_func=self.filter_match)
+        self.filter = Gtk.FilterListModel()
+        self.filter.set_filter(filter_model)
+        self.filter.set_model(self.list_store)
+
+        selection_model = Gtk.SingleSelection().new(model=self.filter)
         self.set_model(selection_model)
         self.set_vexpand(True)
         self.set_hexpand(True)
         self._create_columns()
+
+    def filter_apps_by_name(self, search_term: str) -> None:
+        self.search_query = clean_string(search_term)
+        self.filter.get_filter().changed(Gtk.FilterChange.DIFFERENT)
+
+    def filter_match(self, app: App) -> None:
+        return self.search_query in clean_string(app.name)
 
     def _create_columns(self) -> None:
         name_column = Gtk.ColumnViewColumn()
