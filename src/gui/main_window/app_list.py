@@ -14,7 +14,7 @@ class AppColumnView(Gtk.ColumnView):
 
         self.list_store = Gio.ListStore()
 
-        filter_model = Gtk.CustomFilter().new(match_func=self.filter_match)
+        filter_model = Gtk.CustomFilter().new(match_func=self._filter_match)
         self.filter = Gtk.FilterListModel()
         self.filter.set_filter(filter_model)
         self.filter.set_model(self.list_store)
@@ -23,16 +23,23 @@ class AppColumnView(Gtk.ColumnView):
         self.set_model(selection_model)
         self.set_vexpand(True)
         self.set_hexpand(True)
-        self._create_columns()
+        self._make_columns()
+
+    def add_app(self, app: App) -> None:
+        self.list_store.append(app)
+
+    def add_apps(self, apps: list[App]) -> None:
+        for app in apps:
+            self.add_app(app)
 
     def filter_apps_by_name(self, search_term: str) -> None:
         self.search_query = clean_string(search_term)
         self.filter.get_filter().changed(Gtk.FilterChange.DIFFERENT)
 
-    def filter_match(self, app: App) -> None:
+    def _filter_match(self, app: App) -> None:
         return self.search_query in clean_string(app.name)
 
-    def _create_columns(self) -> None:
+    def _make_columns(self) -> None:
         name_column = Gtk.ColumnViewColumn()
         name_column.set_title("Name")
         name_factory = Gtk.SignalListItemFactory()
@@ -128,10 +135,3 @@ class AppColumnView(Gtk.ColumnView):
         checkbutton = item.get_child()
         app = item.get_item()
         checkbutton.set_active(app.modified)
-
-    def add_app(self, app: App) -> None:
-        self.list_store.append(app)
-
-    def add_apps(self, apps: list[App]) -> None:
-        for app in apps:
-            self.add_app(app)
