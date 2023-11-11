@@ -25,10 +25,10 @@ class IncompatibleVDFError(Exception):
 
 
 class Appinfo:
-    def __init__(self, vdf_path, choose_apps=False, apps=None):
+    def __init__(self):
         self.offset = 0
 
-        self.vdf_path = vdf_path
+        self.vdf_path = ""
 
         self.COMPATIBLE_VERSIONS = [0x107564428]
 
@@ -44,20 +44,17 @@ class Appinfo:
         self.INT_TYPE_INT32 = int.from_bytes(self.TYPE_INT32, "little")
         self.INT_SECTION_END = int.from_bytes(self.SECTION_END, "little")
 
+    def load(self, file_path: str) -> None:
+        if not os.path.isfile(file_path):
+            raise FileNotFoundError(file_path)
+        self.vdf_path = file_path
         with open(self.vdf_path, "rb") as vdf:
             self.appinfoData = bytearray(vdf.read())
-
+        self.offset = 0
         self.verify_vdf_version()
+        self.parsedAppInfo = self.read_all_apps()
 
-        # Load only the modified apps
-        if choose_apps:
-            self.parsedAppInfo = {}
-            for app in apps:
-                self.parsedAppInfo[app] = self.read_app(app)
-        else:
-            self.parsedAppInfo = self.read_all_apps()
-
-    def read_string(self):
+    def read_string(self) -> int:
         str_end = self.appinfoData.find(self.INT_SEPARATOR, self.offset)
         try:
             string = self.appinfoData[self.offset:str_end].decode("utf-8")
@@ -66,7 +63,7 @@ class Appinfo:
         self.offset += str_end - self.offset + 1
         return string
 
-    def read_int64(self):
+    def read_int64(self) -> int:
         int64 = unpack("<Q", self.appinfoData[self.offset:self.offset + 8])[0]
         self.offset += 8
         return int64
@@ -139,21 +136,6 @@ class Appinfo:
         version = self.read_int64()
         if version not in self.COMPATIBLE_VERSIONS:
             raise IncompatibleVDFError(version)
-
-    def read_app(self, app_id):
-        # All relevant apps will have a previous section ending before them
-        # This ensures we are indeed getting an appid instead of some other
-        # random number
-        byte_data = self.SECTION_END + pack("<I", app_id)
-        self.offset = self.appinfoData.find(byte_data) + 1
-        if self.offset == 0:
-            print(f"App {app_id} not found")
-            os._exit(2)
-        app = self.read_header()
-        app["sections"] = self.parse_subsections()
-        app["installed"] = False
-        app["install_path"] = "."
-        return app
 
     def read_all_apps(self):
         apps = {}
