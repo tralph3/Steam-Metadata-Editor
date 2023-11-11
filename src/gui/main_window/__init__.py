@@ -26,10 +26,8 @@ class MainWindow(Gtk.ApplicationWindow):
         self.set_default_size(700, 400)
         self.set_title("Steam-Metadata-Editor")
         left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        self.set_child(left_box)
-        search_entry = Gtk.SearchEntry()
+        search_entry = Gtk.SearchEntry(placeholder_text="Search by name...")
         search_entry.connect("search-changed", self.on_search_changed)
-        left_box.append(search_entry)
         appinfo = Appinfo()
         appinfo.load("/home/tralph3/.local/share/Steam/appcache/appinfo.vdf")
         app_list = []
@@ -39,7 +37,7 @@ class MainWindow(Gtk.ApplicationWindow):
                 name = appinfo.parsedAppInfo[id]["sections"]["appinfo"]["common"]["name"]
             except KeyError:
                 continue
-            type = appinfo.parsedAppInfo[id]["sections"]["appinfo"]["common"]["type"].capitalize()
+            type = appinfo.parsedAppInfo[id]["sections"]["appinfo"]["common"]["type"]
             installed = False
             modified = False
             app_list.append(App(name, id, type, installed, modified))
@@ -49,9 +47,18 @@ class MainWindow(Gtk.ApplicationWindow):
         scrolled_window = Gtk.ScrolledWindow()
         scrolled_window.set_child(self.app_column_view)
         scrolled_window.set_hexpand(True)
-
-        left_box.set_spacing(10)
+        left_box.append(search_entry)
         left_box.append(scrolled_window)
+        left_box.set_spacing(10)
+        MARGIN = 50
+        main_frame = Gtk.Frame(
+            margin_end=MARGIN,
+            margin_start=MARGIN,
+            margin_top=MARGIN,
+            margin_bottom=MARGIN
+        )
+        main_frame.set_child(left_box)
+        self.set_child(main_frame)
 
     def on_search_changed(self, entry: Gtk.SearchEntry):
         search_query = entry.get_text()

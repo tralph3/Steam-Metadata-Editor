@@ -22,7 +22,7 @@ class AppColumnView(Gtk.ColumnView):
         selection_model = Gtk.SingleSelection().new(model=self.filter)
         self.set_model(selection_model)
         self.set_vexpand(True)
-        self.set_hexpand(True)
+        self.set_hexpand(False)
         self._make_columns()
 
     def add_app(self, app: App) -> None:
@@ -46,8 +46,7 @@ class AppColumnView(Gtk.ColumnView):
         name_factory.connect("setup", self._setup_name_factory)
         name_factory.connect("bind", self._bind_name_factory)
         name_column.set_factory(name_factory)
-        name_column.set_resizable(True)
-        name_column.set_fixed_width(400)
+        name_column.set_expand(True)
         self.append_column(name_column)
 
         installed_column = Gtk.ColumnViewColumn()
