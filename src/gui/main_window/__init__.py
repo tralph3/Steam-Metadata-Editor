@@ -23,14 +23,15 @@ class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.set_default_size(600, 250)
+        self.set_default_size(700, 400)
         self.set_title("Steam-Metadata-Editor")
         left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.set_child(left_box)
         search_entry = Gtk.SearchEntry()
         search_entry.connect("search-changed", self.on_search_changed)
         left_box.append(search_entry)
-        appinfo = Appinfo("/home/tralph3/.local/share/Steam/appcache/appinfo.vdf")
+        appinfo = Appinfo()
+        appinfo.load("/home/tralph3/.local/share/Steam/appcache/appinfo.vdf")
         app_list = []
         for app in appinfo.parsedAppInfo.keys():
             id = app

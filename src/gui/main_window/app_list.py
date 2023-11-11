@@ -50,25 +50,6 @@ class AppColumnView(Gtk.ColumnView):
         name_column.set_fixed_width(400)
         self.append_column(name_column)
 
-        id_column = Gtk.ColumnViewColumn()
-        id_column.set_title("ID")
-        id_factory = Gtk.SignalListItemFactory()
-        id_factory.connect("setup", self._setup_id_factory)
-        id_factory.connect("bind", self._bind_id_factory)
-        id_column.set_factory(id_factory)
-        id_column.set_fixed_width(80)
-        id_column.set_resizable(True)
-        self.append_column(id_column)
-
-        type_column = Gtk.ColumnViewColumn()
-        type_column.set_title("Type")
-        type_factory = Gtk.SignalListItemFactory()
-        type_factory.connect("setup", self._setup_type_factory)
-        type_factory.connect("bind", self._bind_type_factory)
-        type_column.set_factory(type_factory)
-        type_column.set_fixed_width(80)
-        self.append_column(type_column)
-
         installed_column = Gtk.ColumnViewColumn()
         installed_column.set_title("Installed")
         installed_factory = Gtk.SignalListItemFactory()
@@ -86,35 +67,40 @@ class AppColumnView(Gtk.ColumnView):
         self.append_column(modified_column)
 
     def _setup_name_factory(self, _fact, item):
-        label = Gtk.Label()
-        label.set_halign(Gtk.Align.START)
-        label.set_ellipsize(Pango.EllipsizeMode.END)
-        item.set_child(label)
+        column_container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, halign=Gtk.Align.START)
+        subtitle_container = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, halign=Gtk.Align.START)
+
+        name_label = Gtk.Label()
+        name_label.set_halign(Gtk.Align.START)
+        name_label.set_ellipsize(Pango.EllipsizeMode.END)
+        name_label.set_css_classes(['app_title'])
+
+        id_label = Gtk.Label()
+        id_label.set_halign(Gtk.Align.START)
+        id_label.set_width_chars(10)
+        id_label.set_xalign(0)
+
+        type_label = Gtk.Label()
+        type_label.set_halign(Gtk.Align.START)
+        type_label.set_ellipsize(Pango.EllipsizeMode.END)
+
+        column_container.append(name_label)
+        column_container.append(subtitle_container)
+
+        subtitle_container.append(id_label)
+        subtitle_container.append(type_label)
+        subtitle_container.set_css_classes(['app_subtitle'])
+
+        item.set_child(column_container)
 
     def _bind_name_factory(self, _fact, item):
-        label = item.get_child()
+        name_label = item.get_child().get_first_child()
+        id_label = item.get_child().get_last_child().get_first_child()
+        type_label = item.get_child().get_last_child().get_last_child()
         app = item.get_item()
-        label.set_label(app.name)
-
-    def _setup_id_factory(self, _fact, item):
-        label = Gtk.Label()
-        label.set_halign(Gtk.Align.START)
-        item.set_child(label)
-
-    def _bind_id_factory(self, _fact, item):
-        label = item.get_child()
-        app = item.get_item()
-        label.set_label(str(app.id))
-
-    def _setup_type_factory(self, _fact, item):
-        label = Gtk.Label()
-        label.set_halign(Gtk.Align.START)
-        item.set_child(label)
-
-    def _bind_type_factory(self, _fact, item):
-        label = item.get_child()
-        app = item.get_item()
-        label.set_label(app.type)
+        name_label.set_label(app.name)
+        id_label.set_label(str(app.id))
+        type_label.set_label(app.type.upper())
 
     def _setup_installed_factory(self, _fact, item):
         checkbutton = Gtk.CheckButton()
