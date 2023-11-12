@@ -1,4 +1,5 @@
-from gi.repository import Gtk
+from gi.repository import Gtk, Gdk
+from datetime import datetime
 
 class DetailsView(Gtk.Box):
     def __init__(self, *args, **kwargs):
@@ -49,6 +50,10 @@ class DetailsView(Gtk.Box):
         app_id_label = Gtk.Label(label="Steam Release Date", vexpand=False, halign=Gtk.Align.START)
         app_id_label.set_css_classes(['entry_title'])
         app_id_entry = Gtk.Entry(vexpand=False, hexpand=True)
+        app_id_entry.set_editable(False)
+        app_id_entry.set_can_focus(False)
+        app_id_entry.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, "x-office-calendar")
+        app_id_entry.connect("icon-press", self.show_calendar_popover)
         app_id_box.append(app_id_label)
         app_id_box.append(app_id_entry)
         self.append(app_id_box)
@@ -56,7 +61,24 @@ class DetailsView(Gtk.Box):
         app_id_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, hexpand=True, spacing=5)
         app_id_label = Gtk.Label(label="Original Release Date", vexpand=False, halign=Gtk.Align.START)
         app_id_label.set_css_classes(['entry_title'])
-        app_id_entry = Gtk.Entry(vexpand=False, hexpand=True)
+        app_id_entry = Gtk.Entry(vexpand=False, hexpand=True, text="2023/05/12")
+        app_id_entry.set_editable(False)
+        app_id_entry.set_can_focus(False)
+        app_id_entry.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, "x-office-calendar")
+        app_id_entry.connect("icon-press", self.show_calendar_popover)
         app_id_box.append(app_id_label)
         app_id_box.append(app_id_entry)
         self.append(app_id_box)
+
+    def show_calendar_popover(self, entry, icon_position):
+        popover = Gtk.Popover()
+        popover.set_parent(entry)
+        calendar = Gtk.Calendar()
+        calendar.connect("day-selected", lambda calendar: self.set_date_from_unix(entry, calendar.get_date().to_unix()))
+        popover.set_child(calendar)
+        popover.show()
+
+    def set_date_from_unix(self, entry: Gtk.Entry, timestamp: int):
+        date = datetime.fromtimestamp(timestamp)
+        formatted_date = date.strftime('%-d of %B, %Y')
+        entry.set_text(formatted_date)
