@@ -18,12 +18,13 @@ from .app_list import AppColumnView
 from appinfo import Appinfo
 from gui.objects import App
 from utils import clean_string
+from .details_view import DetailsView
 
 class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.set_default_size(700, 400)
+        self.set_default_size(1400, 500)
         self.set_title("Steam-Metadata-Editor")
         left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         search_entry = Gtk.SearchEntry(placeholder_text="Search by name...")
@@ -47,17 +48,22 @@ class MainWindow(Gtk.ApplicationWindow):
         scrolled_window = Gtk.ScrolledWindow()
         scrolled_window.set_child(self.app_column_view)
         scrolled_window.set_hexpand(True)
+        scrolled_frame = Gtk.Frame()
+        scrolled_frame.set_child(scrolled_window)
         left_box.append(search_entry)
-        left_box.append(scrolled_window)
+        left_box.append(scrolled_frame)
         left_box.set_spacing(10)
         MARGIN = 50
-        main_frame = Gtk.Frame(
+        main_frame = Gtk.Box(
+            orientation=Gtk.Orientation.HORIZONTAL,
             margin_end=MARGIN,
             margin_start=MARGIN,
             margin_top=MARGIN,
-            margin_bottom=MARGIN
+            margin_bottom=MARGIN,
+            spacing=30,
         )
-        main_frame.set_child(left_box)
+        main_frame.append(left_box)
+        main_frame.append(DetailsView())
         self.set_child(main_frame)
 
     def on_search_changed(self, entry: Gtk.SearchEntry):
