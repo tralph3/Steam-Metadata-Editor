@@ -13,7 +13,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from gi.repository import Gtk
+from gi.repository import Gtk, Adw
 from .app_list import AppColumnView
 from appinfo import Appinfo
 from gui.objects import App
@@ -26,6 +26,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
         self.set_default_size(1400, 500)
         self.set_title("Steam-Metadata-Editor")
+
         left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         search_entry = Gtk.SearchEntry(placeholder_text="Search by name...")
         search_entry.connect("search-changed", self.on_search_changed)
@@ -63,7 +64,9 @@ class MainWindow(Gtk.ApplicationWindow):
             spacing=30,
         )
         main_frame.append(left_box)
-        main_frame.append(DetailsView())
+        details_view = DetailsView()
+        main_frame.append(details_view)
+        self.app_column_view.connect('activate', details_view.load_app)
         self.set_child(main_frame)
 
     def on_search_changed(self, entry: Gtk.SearchEntry):
