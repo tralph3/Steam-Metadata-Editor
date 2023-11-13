@@ -67,7 +67,13 @@ class MainWindow(Gtk.ApplicationWindow):
         details_view = DetailsView()
         main_frame.append(details_view)
         self.app_column_view.connect('activate', details_view.load_app)
-        self.set_child(main_frame)
+        tool_bar = Adw.ToolbarView()
+        action_bar = Gtk.ActionBar()
+        action_bar.pack_end(Gtk.Button(label="Save"))
+        action_bar.pack_start(Gtk.Button(label="Exit"))
+        tool_bar.add_bottom_bar(action_bar)
+        tool_bar.set_content(main_frame)
+        self.set_child(tool_bar)
 
     def on_search_changed(self, entry: Gtk.SearchEntry):
         search_query = entry.get_text()
