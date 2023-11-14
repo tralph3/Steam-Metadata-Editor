@@ -140,6 +140,16 @@ Other Linux distributions can download the source code. The program needs Python
 
 Download the source code and install python3.6 or greater. Make sure to install Tk/Tcl with it.
 
+### Running the program
+
+Open a terminal window and navigate to the `src` directory. On Windows this can be easily done by pressing `Shift` and right-clicking on empty space within that directory. Click on the context menu entry "Open in Terminal" or "Open PowerShell window here". If it doesn't show up, try again first, sometimes it simply doesn't work the first time.
+
+Now start the program:
+
+	python main.py
+
+A bunch of text should appear within that terminal window and after a short while, another window with the program should open. If you want to report a bug, please make sure to copy-paste the entire content of the terminal window.
+
 ---
 
 ## How does it work?
