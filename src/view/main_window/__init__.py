@@ -15,14 +15,13 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from gi.repository import Gtk, Adw
 from .app_list import AppColumnView
-from appinfo import Appinfo
-from gui.objects import App
-from utils import clean_string
+from view.objects import App
 from .details_view import DetailsView
 
 class MainWindow(Gtk.ApplicationWindow):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, model, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.model = model
 
         self.set_default_size(1400, 500)
         self.set_title("Steam-Metadata-Editor")
@@ -30,19 +29,18 @@ class MainWindow(Gtk.ApplicationWindow):
         left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         search_entry = Gtk.SearchEntry(placeholder_text="Search by name...")
         search_entry.connect("search-changed", self.on_search_changed)
-        appinfo = Appinfo()
-        appinfo.load("/home/tralph3/.local/share/Steam/appcache/appinfo.vdf")
         app_list = []
-        for app in appinfo.parsedAppInfo.keys():
-            id = app
+        for appid in self.model.get_all_apps():
+            id = appid
             try:
-                name = appinfo.parsedAppInfo[id]["sections"]["appinfo"]["common"]["name"]
+                name = self.model.get_app_name(appid)
             except KeyError:
                 continue
-            type = appinfo.parsedAppInfo[id]["sections"]["appinfo"]["common"]["type"]
+            type = self.model.get_app_type(appid)
             installed = False
             modified = False
             app_list.append(App(name, id, type, installed, modified))
+
         self.app_column_view = AppColumnView()
         app_list.sort(key=lambda app: clean_string(app.name))
         self.app_column_view.add_apps(app_list)
@@ -78,3 +76,6 @@ class MainWindow(Gtk.ApplicationWindow):
     def on_search_changed(self, entry: Gtk.SearchEntry):
         search_query = entry.get_text()
         self.app_column_view.filter_apps_by_name(search_query)
+
+def clean_string(string: str) -> str:
+    return ''.join(char for char in string if char.isalnum()).lower()

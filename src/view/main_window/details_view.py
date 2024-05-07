@@ -1,6 +1,6 @@
 from gi.repository import Gtk, Gdk
 from datetime import datetime
-from gui.objects import App
+from view.objects import App
 
 class DetailsView(Gtk.Box):
     def __init__(self, *args, **kwargs):

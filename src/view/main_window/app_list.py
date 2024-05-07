@@ -3,8 +3,7 @@ import gi
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 from gi.repository import Gtk, Gio, Pango
-from gui.objects import App
-from utils import clean_string
+from view.objects import App
 
 
 class AppColumnView(Gtk.ColumnView):
@@ -120,3 +119,6 @@ class AppColumnView(Gtk.ColumnView):
         checkbutton = item.get_child()
         app = item.get_item()
         checkbutton.set_active(app.modified)
+
+def clean_string(string: str) -> str:
+    return ''.join(char for char in string if char.isalnum()).lower()
