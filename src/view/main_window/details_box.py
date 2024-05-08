@@ -29,7 +29,7 @@ class DetailsBox(Gtk.Box):
         self.append(name_box)
 
         sortas_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, hexpand=True, spacing=5)
-        sortas_label = Gtk.Label(label="Sort As", vexpand=False, halign=Gtk.Align.START)
+        sortas_label = Gtk.Label(label="Sort as", vexpand=False, halign=Gtk.Align.START)
         sortas_label.set_css_classes(['entry_title'])
         self.sortas_entry = Gtk.Entry(vexpand=False, hexpand=True)
         self.sortas_entry.set_placeholder_text("Unspecified")
@@ -38,7 +38,7 @@ class DetailsBox(Gtk.Box):
         self.append(sortas_box)
 
         steam_release_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, hexpand=True, spacing=5)
-        steam_release_label = Gtk.Label(label="Steam Release Date", vexpand=False, halign=Gtk.Align.START)
+        steam_release_label = Gtk.Label(label="Steam release date", vexpand=False, halign=Gtk.Align.START)
         steam_release_label.set_css_classes(['entry_title'])
         self.steam_release_entry = Gtk.Entry(vexpand=False, hexpand=True)
         self.steam_release_entry.set_editable(False)
@@ -51,7 +51,7 @@ class DetailsBox(Gtk.Box):
         self.append(steam_release_box)
 
         original_release_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, hexpand=True, spacing=5)
-        original_release_label = Gtk.Label(label="Original Release Date", vexpand=False, halign=Gtk.Align.START)
+        original_release_label = Gtk.Label(label="Original release date", vexpand=False, halign=Gtk.Align.START)
         original_release_label.set_css_classes(['entry_title'])
         self.original_release_entry = Gtk.Entry(vexpand=False, hexpand=True)
         self.original_release_entry.set_editable(False)
