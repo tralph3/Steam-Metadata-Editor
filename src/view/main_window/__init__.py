@@ -16,7 +16,7 @@
 from gi.repository import Gtk, Adw
 from .app_list import AppColumnView
 from view.objects import App
-from .details_view import DetailsView
+from .details_box import DetailsBox
 
 class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, model, *args, **kwargs):
@@ -24,22 +24,19 @@ class MainWindow(Gtk.ApplicationWindow):
         self.model = model
 
         self.set_default_size(1400, 500)
-        self.set_title("Steam-Metadata-Editor")
+        self.set_title("Steam Metadata Editor")
 
         left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         search_entry = Gtk.SearchEntry(placeholder_text="Search by name...")
         search_entry.connect("search-changed", self.on_search_changed)
         app_list = []
         for appid in self.model.get_all_apps():
-            id = appid
-            try:
-                name = self.model.get_app_name(appid)
-            except KeyError:
-                continue
+            name = self.model.get_app_name(appid)
+            if name == None: continue
             type = self.model.get_app_type(appid)
             installed = False
             modified = False
-            app_list.append(App(name, id, type, installed, modified))
+            app_list.append(App(name, appid, type, installed, modified))
 
         self.app_column_view = AppColumnView()
         app_list.sort(key=lambda app: clean_string(app.name))
@@ -62,13 +59,16 @@ class MainWindow(Gtk.ApplicationWindow):
             spacing=30,
         )
         main_frame.append(left_box)
-        details_view = DetailsView()
-        main_frame.append(details_view)
-        self.app_column_view.connect('activate', details_view.load_app)
+        details_box = DetailsBox(self.model)
+        main_frame.append(details_box)
+        self.app_column_view.connect('activate', details_box.load_app)
         tool_bar = Adw.ToolbarView()
         action_bar = Gtk.ActionBar()
-        action_bar.pack_end(Gtk.Button(label="Save"))
-        action_bar.pack_start(Gtk.Button(label="Exit"))
+        save_button = Gtk.Button(label="Save")
+        exit_button = Gtk.Button(label="Exit")
+        save_button.connect("clicked", self._save_changes)
+        action_bar.pack_end(save_button)
+        action_bar.pack_start(exit_button)
         tool_bar.add_bottom_bar(action_bar)
         tool_bar.set_content(main_frame)
         self.set_child(tool_bar)
@@ -76,6 +76,9 @@ class MainWindow(Gtk.ApplicationWindow):
     def on_search_changed(self, entry: Gtk.SearchEntry):
         search_query = entry.get_text()
         self.app_column_view.filter_apps_by_name(search_query)
+
+    def _save_changes(self, _):
+        self.model.write()
 
 def clean_string(string: str) -> str:
     return ''.join(char for char in string if char.isalnum()).lower()
