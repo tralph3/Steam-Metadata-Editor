@@ -1,5 +1,5 @@
 # A Metadata Editor for Steam Applications
-# Copyright (C) 2023  Tomás Ralph
+# Copyright (C) 2024  Tomás Ralph
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
