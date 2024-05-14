@@ -13,22 +13,17 @@ class DetailsBox(Gtk.Box):
     def _make_widgets(self):
         self.set_orientation(Gtk.Orientation.VERTICAL)
         self.set_spacing(15)
-
         id_box, self.id_entry = self._compose_entry_box("App ID", editable=False)
-        self.append(id_box)
-
         name_box, self.name_entry = self._compose_entry_box("Name")
-        self.append(name_box)
-
         sortas_box, self.sortas_entry = self._compose_entry_box("Sort as", "Unspecified")
-        self.append(sortas_box)
-
         steam_release_box, self.steam_release_entry = self._compose_entry_box(
             "Steam release date", "Unspecified", False, "x-office-calendar")
-        self.append(steam_release_box)
-
         original_release_box, self.original_release_entry = self._compose_entry_box(
             "Original release date", "Unspecified", False, "x-office-calendar")
+        self.append(id_box)
+        self.append(name_box)
+        self.append(sortas_box)
+        self.append(steam_release_box)
         self.append(original_release_box)
 
     @staticmethod
