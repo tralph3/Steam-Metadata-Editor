@@ -1,11 +1,7 @@
 ;;; -*- lisp-data -*-
 ((:name "Test with coverage"
         :command "pytest --cov"
-        :type "compile"
-        :workdir nil
-        :environment nil)
+        :type "compile")
  (:name "Run"
         :command "python src/main.py"
-        :type "compile"
-        :workdir nil
-        :environment nil))
+        :type "compile"))
