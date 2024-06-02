@@ -73,9 +73,14 @@ class MainWindow(Gtk.ApplicationWindow):
     def _configure_widgets(self):
         self._search_entry.connect("search-changed", self._on_search_changed)
         self._app_column_view.add_apps(self._make_app_list())
-        self._app_column_view.connect('activate', lambda c, i: event_emit(Event.LOAD_APP, c.get_model().get_item(i)))
+        self._app_column_view.connect('activate', self._change_current_app)
         self._save_button.connect("clicked", self._save_changes)
         self._exit_button.connect("clicked", lambda *_: self.destroy())
+
+    def _change_current_app(self, column_view, index):
+        app: App = column_view.get_model().get_item(index)
+        event_emit(Event.SAVE_CHANGES)
+        event_emit(Event.LOAD_APP, app)
 
     def _make_app_list(self) -> [App]:
         app_list = []
@@ -99,6 +104,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self._app_column_view.filter_apps_by_name(search_query)
 
     def _save_changes(self, _=None):
+        event_emit(Event.SAVE_CHANGES)
         self.model.write()
 
 def clean_string(string: str) -> str:

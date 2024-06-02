@@ -3,6 +3,7 @@ from typing import Callable
 
 class Event(Enum):
     LOAD_APP = auto()
+    SAVE_CHANGES = auto()
 
 _event_subscriptors: dict[Event, [Callable]] = {}
 
