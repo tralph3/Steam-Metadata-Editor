@@ -7,7 +7,7 @@ from view.objects import App
 
 
 class AppColumnView(Gtk.ColumnView):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.search_query = ""
 
@@ -24,21 +24,23 @@ class AppColumnView(Gtk.ColumnView):
         self.set_hexpand(False)
         self._make_columns()
 
-    def add_app(self, app: App) -> None:
+        self.set_property("single-click-activate", True)
+
+    def add_app(self, app: App):
         self.list_store.append(app)
 
-    def add_apps(self, apps: list[App]) -> None:
+    def add_apps(self, apps: list[App]):
         for app in apps:
             self.add_app(app)
 
-    def filter_apps_by_name(self, search_term: str) -> None:
+    def filter_apps_by_name(self, search_term: str):
         self.search_query = clean_string(search_term)
         self.filter.get_filter().changed(Gtk.FilterChange.DIFFERENT)
 
-    def _filter_match(self, app: App) -> None:
+    def _filter_match(self, app: App):
         return self.search_query in clean_string(app.name)
 
-    def _make_columns(self) -> None:
+    def _make_columns(self):
         name_column = Gtk.ColumnViewColumn()
         name_column.set_title("Name")
         name_factory = Gtk.SignalListItemFactory()
