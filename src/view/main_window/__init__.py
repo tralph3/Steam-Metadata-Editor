@@ -51,7 +51,7 @@ class MainWindow(Gtk.ApplicationWindow):
         tool_bar = Adw.ToolbarView()
         action_bar = Gtk.ActionBar()
         self._save_button = Gtk.Button(label="Save")
-        self._exit_button = Gtk.Button(label="Exit")
+        self._quit_button = Gtk.Button(label="Quit without saving")
 
         scrolled_window.set_child(self._app_column_view)
         scrolled_window.set_hexpand(True)
@@ -65,7 +65,7 @@ class MainWindow(Gtk.ApplicationWindow):
         main_frame.append(details_box)
 
         action_bar.pack_end(self._save_button)
-        action_bar.pack_start(self._exit_button)
+        action_bar.pack_start(self._quit_button)
         tool_bar.add_bottom_bar(action_bar)
         tool_bar.set_content(main_frame)
         self.set_child(tool_bar)
@@ -75,7 +75,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self._app_column_view.add_apps(self._make_app_list())
         self._app_column_view.connect('activate', self._change_current_app)
         self._save_button.connect("clicked", self._save_changes)
-        self._exit_button.connect("clicked", lambda *_: self.destroy())
+        self._quit_button.connect("clicked", lambda *_: self.destroy())
 
     def _change_current_app(self, column_view, index):
         app: App = column_view.get_model().get_item(index)
