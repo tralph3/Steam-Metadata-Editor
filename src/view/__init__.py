@@ -8,8 +8,8 @@ from .main_window import MainWindow
 
 
 class View(Adw.Application):
-    def __init__(self, model, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, model, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.model = model
         css_provider = Gtk.CssProvider()
         css_provider.load_from_path('src/view/style.css')
