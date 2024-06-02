@@ -67,6 +67,7 @@ class MainWindow(Gtk.ApplicationWindow):
         save_button = Gtk.Button(label="Save")
         exit_button = Gtk.Button(label="Exit")
         save_button.connect("clicked", self._save_changes)
+        exit_button.connect("clicked", lambda *_: self.destroy())
         action_bar.pack_end(save_button)
         action_bar.pack_start(exit_button)
         tool_bar.add_bottom_bar(action_bar)
