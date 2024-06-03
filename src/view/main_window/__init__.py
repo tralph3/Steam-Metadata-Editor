@@ -18,6 +18,8 @@ from .app_list import AppColumnView
 from view.objects import App
 from .details_box import DetailsBox
 from view.events import Event, event_emit
+from .util import clean_string
+from .launch_menu import LaunchMenu
 
 MARGIN = 50
 
@@ -32,9 +34,11 @@ class MainWindow(Gtk.ApplicationWindow):
     def _configure_window(self):
         self.set_default_size(1400, 500)
         self.set_title("Steam Metadata Editor")
+        self.set_css_classes(["main_window"])
 
     def _make_widgets(self):
         left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        right_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self._search_entry = Gtk.SearchEntry(placeholder_text="Search by name...")
         scrolled_window = Gtk.ScrolledWindow()
         self._app_column_view = AppColumnView()
@@ -48,10 +52,13 @@ class MainWindow(Gtk.ApplicationWindow):
             spacing=30,
         )
         details_box = DetailsBox(self.model)
+        launch_menu = LaunchMenu(self.model)
         tool_bar = Adw.ToolbarView()
         action_bar = Gtk.ActionBar()
         self._save_button = Gtk.Button(label="Save")
         self._quit_button = Gtk.Button(label="Quit without saving")
+
+        self._save_button.set_css_classes(["main_button"])
 
         scrolled_window.set_child(self._app_column_view)
         scrolled_window.set_hexpand(True)
@@ -61,8 +68,12 @@ class MainWindow(Gtk.ApplicationWindow):
         left_box.append(scrolled_frame)
         left_box.set_spacing(10)
 
+        right_box.append(details_box)
+        right_box.append(launch_menu)
+        right_box.set_spacing(30)
+
         main_frame.append(left_box)
-        main_frame.append(details_box)
+        main_frame.append(right_box)
 
         action_bar.pack_end(self._save_button)
         action_bar.pack_start(self._quit_button)
@@ -106,6 +117,3 @@ class MainWindow(Gtk.ApplicationWindow):
     def _save_changes(self, _=None):
         event_emit(Event.SAVE_CHANGES)
         self.model.write()
-
-def clean_string(string: str) -> str:
-    return ''.join(char for char in string if char.isalnum()).lower()

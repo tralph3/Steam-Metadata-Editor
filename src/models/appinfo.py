@@ -57,3 +57,9 @@ class AppinfoFile:
             return self._appinfo["apps"][appid]["content"]["appinfo"]["common"]["original_release_date"]
         except KeyError:
             return None
+
+    def get_app_launch_menu(self, appid: int) -> dict:
+        try:
+            return self._appinfo["apps"][appid]["content"]["appinfo"]["config"]["launch"]
+        except KeyError:
+            return None

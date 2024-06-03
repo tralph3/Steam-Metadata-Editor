@@ -2,6 +2,7 @@ from gi.repository import Gtk, Gdk
 from datetime import datetime
 from view.objects import App
 from view.events import Event, event_connect
+from .util import compose_entry_box
 
 DATE_FORMAT = '%-d of %B, %Y'
 
@@ -24,48 +25,18 @@ class DetailsBox(Gtk.Box):
     def _make_widgets(self):
         self.set_orientation(Gtk.Orientation.VERTICAL)
         self.set_spacing(15)
-        id_box, self.id_entry = self._compose_entry_box("App ID", editable=False)
-        name_box, self.name_entry = self._compose_entry_box("Name")
-        sortas_box, self.sortas_entry = self._compose_entry_box("Sort as", "Unspecified")
-        steam_release_box, self.steam_release_entry = self._compose_entry_box(
+        id_box, self.id_entry = compose_entry_box("App ID", editable=False)
+        name_box, self.name_entry = compose_entry_box("Name")
+        sortas_box, self.sortas_entry = compose_entry_box("Sort as", "Unspecified")
+        steam_release_box, self.steam_release_entry = compose_entry_box(
             "Steam release date", "Unspecified", False, "x-office-calendar")
-        original_release_box, self.original_release_entry = self._compose_entry_box(
+        original_release_box, self.original_release_entry = compose_entry_box(
             "Original release date", "Unspecified", False, "x-office-calendar")
         self.append(id_box)
         self.append(name_box)
         self.append(sortas_box)
         self.append(steam_release_box)
         self.append(original_release_box)
-
-    @staticmethod
-    def _make_label(label: str) -> Gtk.Label:
-        label = Gtk.Label(label=label, vexpand=False, halign=Gtk.Align.START)
-        label.set_css_classes(['entry_title'])
-        return label
-
-    @staticmethod
-    def _make_entry(placeholder: str=None, editable: bool=True, icon: str=None) -> Gtk.Entry:
-        entry = Gtk.Entry(vexpand=False, hexpand=True)
-        if not editable:
-            entry.set_editable(False)
-            entry.set_can_focus(False)
-        if placeholder:
-            entry.set_placeholder_text(placeholder)
-        if icon:
-            entry.set_icon_from_icon_name(Gtk.EntryIconPosition.SECONDARY, icon)
-        return entry
-
-    @staticmethod
-    def _make_box() -> Gtk.Box:
-        return Gtk.Box(orientation=Gtk.Orientation.VERTICAL, hexpand=True, spacing=5)
-
-    def _compose_entry_box(self, label: str, placeholder: str=None, editable: bool=True, icon: str=None) -> (Gtk.Box, Gtk.Entry):
-        box = self._make_box()
-        label = self._make_label(label)
-        entry = self._make_entry(placeholder, editable, icon)
-        box.append(label)
-        box.append(entry)
-        return (box, entry)
 
     def _connect_signals(self):
         self.steam_release_entry.connect("icon-press", self._show_calendar_popover)

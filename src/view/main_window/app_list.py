@@ -4,6 +4,7 @@ gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 from gi.repository import Gtk, Gio, Pango
 from view.objects import App
+from .util import clean_string
 
 
 class AppColumnView(Gtk.ColumnView):
@@ -29,7 +30,7 @@ class AppColumnView(Gtk.ColumnView):
     def add_app(self, app: App):
         self.list_store.append(app)
 
-    def add_apps(self, apps: list[App]):
+    def add_apps(self, apps: [App]):
         for app in apps:
             self.add_app(app)
 
@@ -121,6 +122,3 @@ class AppColumnView(Gtk.ColumnView):
         checkbutton = item.get_child()
         app = item.get_item()
         checkbutton.set_active(app.modified)
-
-def clean_string(string: str) -> str:
-    return ''.join(char for char in string if char.isalnum()).lower()

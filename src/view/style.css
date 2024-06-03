@@ -1,3 +1,20 @@
+.main_button {
+    background: linear-gradient(90deg, #06BFFF 0%, #2D73FF 100%);
+    color: #fff;
+    border-radius: 2px;
+    border: none;
+    outline: none;
+    padding: 12px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 400;
+    font-family: inherit;
+}
+
+.main_window {
+    background-color: #181a21;
+}
+
 .app_title {
     font-weight: bold;
     font-size: 16px;
@@ -12,4 +29,22 @@
 .entry_title {
     font-weight: 500;
     font-size: 12px;
+}
+
+.launch_menu {
+    padding: 0;
+    margin: 0;
+}
+
+.launch_entry_even {
+    background-color: #0e1014;
+}
+
+.launch_entry_odd {
+    background-color: #262d36;
+}
+
+.launch_entry_even,
+.launch_entry_odd {
+    padding: 18px;
 }
