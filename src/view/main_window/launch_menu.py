@@ -97,18 +97,39 @@ class LaunchMenu(Gtk.Frame):
     def _make_widgets(self):
         scrolled_window = Gtk.ScrolledWindow()
         self._entries_box = _make_box()
-        tool_bar = Adw.ToolbarView()
+        self._tool_bar = Adw.ToolbarView()
         action_bar = Gtk.ActionBar()
+        self._empty_status_page = Adw.StatusPage()
 
         add_button = Gtk.Button()
         add_button.set_icon_name("list-add")
         add_button.connect("clicked", lambda *_: self._add_empty_entry())
         action_bar.pack_end(add_button)
-        tool_bar.add_bottom_bar(action_bar)
-        tool_bar.set_content(scrolled_window)
 
-        self.set_child(tool_bar)
+        status_add_button = Gtk.Button(label="Add launch entry")
+        status_add_button.set_css_classes(["button", "main_button"])
+        status_add_button.connect("clicked", lambda *_: self._add_empty_entry())
+
+        self._empty_status_page.set_title("No entries")
+        self._empty_status_page.set_description("This app has no launch entries.")
+        self._empty_status_page.set_icon_name("dialog-information")
+        self._empty_status_page.set_child(status_add_button)
+
+        self._tool_bar.add_bottom_bar(action_bar)
+        self._tool_bar.set_content(scrolled_window)
+
         scrolled_window.set_child(self._entries_box)
+        self._set_child_widget()
+
+    def _set_child_widget(self):
+        """
+        Decides if the entry list is shown, or the empty status
+        page in case there's no entries.
+        """
+        if not self._get_entry_list():
+            self.set_child(self._empty_status_page)
+        else:
+            self.set_child(self._tool_bar)
 
     def _connect_signals(self):
         event_connect(Event.LOAD_APP, self._load_app)
@@ -118,6 +139,7 @@ class LaunchMenu(Gtk.Frame):
     def _delete_launch_entry(self, entry: LaunchEntry):
         self._entries_box.remove(entry)
         self._recalculate_entry_css_classes()
+        self._set_child_widget()
 
     def _make_entries(self):
         if not self._current_app: return
@@ -134,6 +156,7 @@ class LaunchMenu(Gtk.Frame):
     def _add_launch_entry(self, values: dict):
         self._entries_box.append(LaunchEntry(values))
         self._recalculate_entry_css_classes()
+        self._set_child_widget()
 
     def _recalculate_entry_css_classes(self):
         for i, entry in enumerate(self._get_entry_list()):
@@ -168,6 +191,7 @@ class LaunchMenu(Gtk.Frame):
     def _load_app(self, app: App):
         self._current_app = app
         self._load_app_entries()
+        self._set_child_widget()
 
     def _save_current_app(self):
         updated_entries = self._get_updated_entries()
