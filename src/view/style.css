@@ -1,7 +1,10 @@
+* {
+    border-radius: 2px;
+}
+
 .main_button {
     background: linear-gradient(90deg, #06BFFF 0%, #2D73FF 100%);
     color: #fff;
-    border-radius: 2px;
     border: none;
     outline: none;
     padding: 12px;
