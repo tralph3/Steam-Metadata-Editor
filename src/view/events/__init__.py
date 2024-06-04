@@ -4,6 +4,7 @@ from typing import Callable
 class Event(Enum):
     LOAD_APP = auto()
     SAVE_CHANGES = auto()
+    DELETE_LAUNCH_ENTRY = auto()
 
 _event_subscriptors: dict[Event, [Callable]] = {}
 

@@ -1,6 +1,6 @@
 from gi.repository import Gtk, Adw
 from view.objects import App
-from view.events import Event, event_connect
+from view.events import Event, event_connect, event_emit
 from .util import compose_entry_box, _make_box
 
 class LaunchEntry(Gtk.Box):
@@ -25,6 +25,7 @@ class LaunchEntry(Gtk.Box):
         self.linux_checkbutton = Gtk.CheckButton(label="Linux")
 
         delete_button.set_icon_name("edit-delete")
+        delete_button.connect("clicked", self._delete_self)
 
         checkbutton_box.append(self.windows_checkbutton)
         checkbutton_box.append(self.mac_checkbutton)
@@ -59,6 +60,9 @@ class LaunchEntry(Gtk.Box):
         self.mac_checkbutton.set_active("macos" in entry_oslist)
         self.linux_checkbutton.set_active("linux" in entry_oslist)
 
+    def _delete_self(self, *_):
+        event_emit(Event.DELETE_LAUNCH_ENTRY, self)
+
 
 class LaunchMenu(Gtk.Frame):
     def __init__(self, model, *args, **kwargs):
@@ -87,6 +91,10 @@ class LaunchMenu(Gtk.Frame):
 
     def _connect_signals(self):
         event_connect(Event.LOAD_APP, self._load_app)
+        event_connect(Event.DELETE_LAUNCH_ENTRY, self._delete_launch_entry)
+
+    def _delete_launch_entry(self, entry: LaunchEntry):
+        self._entries_box.remove(entry)
 
     def _make_entries(self) -> [LaunchEntry]:
         entries = []
