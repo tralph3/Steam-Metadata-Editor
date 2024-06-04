@@ -83,6 +83,7 @@ class LaunchMenu(Gtk.Frame):
 
         add_button = Gtk.Button()
         add_button.set_icon_name("list-add")
+        add_button.connect("clicked", lambda *_: self._add_empty_entry())
         action_bar.pack_end(add_button)
         tool_bar.add_bottom_bar(action_bar)
         tool_bar.set_content(scrolled_window)
@@ -112,6 +113,8 @@ class LaunchMenu(Gtk.Frame):
             self._entries_box.remove(child)
             child = self._entries_box.get_first_child()
 
+    def _add_empty_entry(self):
+        self._add_launch_entry({})
     def _load_app_entries(self):
         self._delete_all_entries_from_box()
         for entry in self._make_entries():
