@@ -95,16 +95,10 @@ class LaunchMenu(Gtk.Frame):
         self.set_css_classes(['launch_menu'])
 
     def _make_widgets(self):
-        scrolled_window = Gtk.ScrolledWindow()
+        self._scrolled_window = Gtk.ScrolledWindow()
         self._entries_box = _make_box()
-        self._tool_bar = Adw.ToolbarView()
-        action_bar = Gtk.ActionBar()
+        self._entries_box.set_spacing(0)
         self._empty_status_page = Adw.StatusPage()
-
-        add_button = Gtk.Button()
-        add_button.set_icon_name("list-add")
-        add_button.connect("clicked", lambda *_: self._add_empty_entry())
-        action_bar.pack_end(add_button)
 
         status_add_button = Gtk.Button(label="Add launch entry")
         status_add_button.set_css_classes(["button", "main_button"])
@@ -115,21 +109,14 @@ class LaunchMenu(Gtk.Frame):
         self._empty_status_page.set_icon_name("dialog-information")
         self._empty_status_page.set_child(status_add_button)
 
-        self._tool_bar.add_bottom_bar(action_bar)
-        self._tool_bar.set_content(scrolled_window)
-
-        scrolled_window.set_child(self._entries_box)
+        self._scrolled_window.set_child(self._entries_box)
         self._set_child_widget()
 
     def _set_child_widget(self):
-        """
-        Decides if the entry list is shown, or the empty status
-        page in case there's no entries.
-        """
         if not self._get_entry_list():
             self.set_child(self._empty_status_page)
         else:
-            self.set_child(self._tool_bar)
+            self.set_child(self._scrolled_window)
 
     def _connect_signals(self):
         event_connect(Event.LOAD_APP, self._load_app)
