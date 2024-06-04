@@ -4,10 +4,9 @@ from view.events import Event, event_connect, event_emit
 from .util import compose_entry_box, _make_box
 
 class LaunchEntry(Gtk.Box):
-    def __init__(self, entry, index: int, *args, **kwargs):
+    def __init__(self, entry, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.entry = entry
-        self.index = index
         self._make_widgets()
         self._configure_widgets()
 
@@ -25,7 +24,7 @@ class LaunchEntry(Gtk.Box):
         self.linux_checkbutton = Gtk.CheckButton(label="Linux")
 
         delete_button.set_icon_name("edit-delete")
-        delete_button.connect("clicked", self._delete_self)
+        delete_button.connect("clicked", lambda *_: self._delete_self())
         delete_button.set_css_classes(["button", "delete_button"])
 
         checkbutton_box.append(self.windows_checkbutton)
@@ -42,13 +41,7 @@ class LaunchEntry(Gtk.Box):
         self.append(bottom_box)
 
     def _configure_widgets(self):
-        css_class = ""
-        if self.index % 2 == 0:
-            css_class = "launch_entry_even"
-        else:
-            css_class = "launch_entry_odd"
         self.set_spacing(15)
-        self.set_css_classes([css_class])
         self.description_entry.set_text(self.entry.get("description", ""))
         self.execuable_entry.set_text(self.entry.get("executable", ""))
         self.workdir_entry.set_text(self.entry.get("workingdir", ""))
@@ -61,7 +54,7 @@ class LaunchEntry(Gtk.Box):
         self.mac_checkbutton.set_active("macos" in entry_oslist)
         self.linux_checkbutton.set_active("linux" in entry_oslist)
 
-    def _delete_self(self, *_):
+    def _delete_self(self):
         event_emit(Event.DELETE_LAUNCH_ENTRY, self)
 
 
@@ -97,15 +90,14 @@ class LaunchMenu(Gtk.Frame):
 
     def _delete_launch_entry(self, entry: LaunchEntry):
         self._entries_box.remove(entry)
+        self._recalculate_entry_css_classes()
 
-    def _make_entries(self) -> [LaunchEntry]:
-        entries = []
-        if not self._current_app: return entries
+    def _make_entries(self):
+        if not self._current_app: return
         app_entries = self.model.get_app_launch_menu(self._current_app.id)
-        if not app_entries: return entries
+        if not app_entries: return
         for i, entry in enumerate(app_entries):
-            entries.append(LaunchEntry(app_entries[entry], i))
-        return entries
+            self._add_launch_entry(app_entries[entry])
 
     def _delete_all_entries_from_box(self):
         child = self._entries_box.get_first_child()
@@ -113,12 +105,27 @@ class LaunchMenu(Gtk.Frame):
             self._entries_box.remove(child)
             child = self._entries_box.get_first_child()
 
+    def _add_launch_entry(self, values: dict):
+        self._entries_box.append(LaunchEntry(values))
+        self._recalculate_entry_css_classes()
+
+    def _recalculate_entry_css_classes(self):
+        child = self._entries_box.get_first_child()
+        index = 0
+        while child:
+            if index % 2 == 0:
+                child.set_css_classes(["launch_entry_even"])
+            else:
+                child.set_css_classes(["launch_entry_odd"])
+            child = child.get_next_sibling()
+            index += 1
+
     def _add_empty_entry(self):
         self._add_launch_entry({})
+
     def _load_app_entries(self):
         self._delete_all_entries_from_box()
-        for entry in self._make_entries():
-            self._entries_box.append(entry)
+        self._make_entries()
 
     def _load_app(self, app: App):
         self._current_app = app
