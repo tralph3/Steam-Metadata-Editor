@@ -26,6 +26,7 @@ class LaunchEntry(Gtk.Box):
 
         delete_button.set_icon_name("edit-delete")
         delete_button.connect("clicked", self._delete_self)
+        delete_button.set_css_classes(["button", "delete_button"])
 
         checkbutton_box.append(self.windows_checkbutton)
         checkbutton_box.append(self.mac_checkbutton)

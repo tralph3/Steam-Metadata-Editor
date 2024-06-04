@@ -58,7 +58,8 @@ class MainWindow(Gtk.ApplicationWindow):
         self._save_button = Gtk.Button(label="Save")
         self._quit_button = Gtk.Button(label="Quit without saving")
 
-        self._save_button.set_css_classes(["main_button"])
+        self._save_button.set_css_classes(["button", "main_button"])
+        self._quit_button.set_css_classes(["button"])
 
         scrolled_window.set_child(self._app_column_view)
         scrolled_window.set_hexpand(True)

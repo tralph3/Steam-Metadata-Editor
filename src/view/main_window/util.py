@@ -13,7 +13,7 @@ def _make_box() -> Gtk.Box:
     return Gtk.Box(orientation=Gtk.Orientation.VERTICAL, hexpand=True, spacing=5)
 
 def _make_label(label: str) -> Gtk.Label:
-    label = Gtk.Label(label=label, vexpand=False, halign=Gtk.Align.START)
+    label = Gtk.Label(label=label.upper(), vexpand=False, halign=Gtk.Align.START)
     label.set_css_classes(['entry_title'])
     return label
 
