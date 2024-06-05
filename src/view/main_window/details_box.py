@@ -72,7 +72,7 @@ class DetailsBox(Gtk.Box):
     def _set_current_app(self, app: App):
         self._current_app = app
         self._intial_app_values = {
-            "name": self._current_app.name,
+            "name": self.model.get_app_name(self._current_app.id) or "",
             "sortas": self.model.get_app_sortas(self._current_app.id) or "",
             "steam_release": self.model.get_app_steam_release_date(self._current_app.id),
             "original_release": self.model.get_app_original_release_date(self._current_app.id)
