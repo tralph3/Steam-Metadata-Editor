@@ -96,20 +96,34 @@ class LaunchMenu(Gtk.Frame):
 
     def _make_widgets(self):
         self._scrolled_window = Gtk.ScrolledWindow()
+        container_box = _make_box()
+        container_box.set_spacing(30)
+        container_box.set_margin_bottom(30)
         self._entries_box = _make_box()
         self._entries_box.set_spacing(0)
         self._empty_status_page = Adw.StatusPage()
 
+        add_button = Gtk.Button(label="Add launch entry")
+        add_button.set_css_classes(["button", "main_button"])
+        add_button.connect("clicked", lambda *_: self._add_empty_entry())
+        add_button.set_hexpand(False)
+        add_button.set_halign(Gtk.Align.CENTER)
+
         status_add_button = Gtk.Button(label="Add launch entry")
         status_add_button.set_css_classes(["button", "main_button"])
         status_add_button.connect("clicked", lambda *_: self._add_empty_entry())
+        status_add_button.set_hexpand(False)
+        status_add_button.set_halign(Gtk.Align.CENTER)
 
         self._empty_status_page.set_title("No entries")
         self._empty_status_page.set_description("This app has no launch entries.")
         self._empty_status_page.set_icon_name("dialog-information")
         self._empty_status_page.set_child(status_add_button)
 
-        self._scrolled_window.set_child(self._entries_box)
+        container_box.append(self._entries_box)
+        container_box.append(add_button)
+
+        self._scrolled_window.set_child(container_box)
         self._set_child_widget()
 
     def _set_child_widget(self):

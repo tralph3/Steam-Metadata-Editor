@@ -27,6 +27,7 @@ class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, model, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.model = model
+        self._has_loaded_app = False
         self._configure_window()
         self._make_widgets()
         self._configure_widgets()
@@ -38,12 +39,12 @@ class MainWindow(Gtk.ApplicationWindow):
 
     def _make_widgets(self):
         left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        right_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self._right_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self._search_entry = Gtk.SearchEntry(placeholder_text="Search by name...")
         scrolled_window = Gtk.ScrolledWindow()
         self._app_column_view = AppColumnView()
         scrolled_frame = Gtk.Frame()
-        main_frame = Gtk.Box(
+        self._main_box = Gtk.Box(
             orientation=Gtk.Orientation.HORIZONTAL,
             margin_end=MARGIN,
             margin_start=MARGIN,
@@ -55,6 +56,11 @@ class MainWindow(Gtk.ApplicationWindow):
         launch_menu = LaunchMenu(self.model)
         tool_bar = Adw.ToolbarView()
         action_bar = Gtk.ActionBar()
+        no_app_status_page = Adw.StatusPage()
+        no_app_status_page.set_title("No App Selected")
+        no_app_status_page.set_description("Start by selecting an app from the list on the left.")
+        no_app_status_page.set_icon_name("dialog-information")
+
         self._save_button = Gtk.Button(label="Save")
         self._quit_button = Gtk.Button(label="Quit without saving")
 
@@ -69,17 +75,18 @@ class MainWindow(Gtk.ApplicationWindow):
         left_box.append(scrolled_frame)
         left_box.set_spacing(10)
 
-        right_box.append(details_box)
-        right_box.append(launch_menu)
-        right_box.set_spacing(30)
+        self._right_box.append(details_box)
+        self._right_box.append(launch_menu)
+        self._right_box.set_spacing(30)
 
-        main_frame.append(left_box)
-        main_frame.append(right_box)
+        self._main_box.append(left_box)
+        self._main_box.append(no_app_status_page)
+        self._main_box.set_homogeneous(True)
 
         action_bar.pack_end(self._save_button)
         action_bar.pack_start(self._quit_button)
         tool_bar.add_bottom_bar(action_bar)
-        tool_bar.set_content(main_frame)
+        tool_bar.set_content(self._main_box)
         self.set_child(tool_bar)
 
     def _configure_widgets(self):
@@ -90,6 +97,10 @@ class MainWindow(Gtk.ApplicationWindow):
         self._quit_button.connect("clicked", lambda *_: self.destroy())
 
     def _change_current_app(self, column_view, index):
+        if not self._has_loaded_app:
+            self._has_loaded_app = True
+            self._main_box.remove(self._main_box.get_last_child())
+            self._main_box.append(self._right_box)
         app: App = column_view.get_model().get_item(index)
         event_emit(Event.SAVE_CHANGES)
         event_emit(Event.LOAD_APP, app)
