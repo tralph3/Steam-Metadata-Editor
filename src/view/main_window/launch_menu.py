@@ -4,8 +4,9 @@ from view.events import Event, event_connect, event_emit
 from .util import compose_entry_box, _make_box
 
 class LaunchEntry(Gtk.Box):
-    def __init__(self, entry, *args, **kwargs):
+    def __init__(self, entry: dict, appid: int, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.appid = appid
         self.entry = entry
         self._make_widgets()
         self._configure_widgets()
@@ -155,7 +156,7 @@ class LaunchMenu(Gtk.Frame):
             self._entries_box.remove(entry)
 
     def _add_launch_entry(self, values: dict):
-        self._entries_box.append(LaunchEntry(values))
+        self._entries_box.append(LaunchEntry(values, self._current_app.id))
         self._recalculate_entry_css_classes()
         self._set_child_widget()
 
