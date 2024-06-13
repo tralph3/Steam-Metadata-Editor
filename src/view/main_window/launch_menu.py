@@ -13,7 +13,7 @@ class LaunchEntry(Gtk.Box):
     def _make_widgets(self):
         self.set_orientation(Gtk.Orientation.VERTICAL)
         description_box, self.description_entry = compose_entry_box("Description", "Unspecified")
-        executable_box, self.execuable_entry = compose_entry_box("Executable", "Unspecified", False, "folder")
+        executable_box, self.executable_entry = compose_entry_box("Executable", "Unspecified", False, "folder")
         workdir_box, self.workdir_entry = compose_entry_box("Working Directory", "Unspecified", False, "folder")
         arguments_box, self.arguments_entry = compose_entry_box("Launch Arguments", "Unspecified")
         delete_button = Gtk.Button()
@@ -43,7 +43,7 @@ class LaunchEntry(Gtk.Box):
     def _configure_widgets(self):
         self.set_spacing(15)
         self.description_entry.set_text(self.entry.get("description", ""))
-        self.execuable_entry.set_text(self.entry.get("executable", ""))
+        self.executable_entry.set_text(self.entry.get("executable", ""))
         self.workdir_entry.set_text(self.entry.get("workingdir", ""))
         arguments = self.entry.get("arguments", "")
         if isinstance(arguments, int): arguments = ""
@@ -70,8 +70,8 @@ class LaunchEntry(Gtk.Box):
     def get_updated_entry(self) -> dict:
         if self.description_entry.get_text():
             self.entry["description"] = self.description_entry.get_text()
-        if self.execuable_entry.get_text():
-            self.entry["executable"] = self.execuable_entry.get_text()
+        if self.executable_entry.get_text():
+            self.entry["executable"] = self.executable_entry.get_text()
         if self.workdir_entry.get_text():
             self.entry["workingdir"] = self.workdir_entry.get_text()
         if self.arguments_entry.get_text():
