@@ -27,8 +27,8 @@ class TextVdfDecoder:
     def _parse_contents(self) -> dict:
         results = {}
         while self.contents[self.pointer] not in "}\n":
-            dict_match = REGEX_DICTIONARY.search(self.contents, pos=self.pointer)
-            if dict_match and dict_match.start() == self.pointer:
+            if self._standing_on_dictionary():
+                dict_match = REGEX_DICTIONARY.search(self.contents, pos=self.pointer)
                 key = dict_match.group(1)
                 self.pointer = dict_match.end()
                 results[key] = self._parse_contents()
@@ -44,3 +44,7 @@ class TextVdfDecoder:
             raise TextVdfDecodeError("Unexpected key/value format")
         self.pointer = match.end()
         return (match.group(1), match.group(2))
+
+    def _standing_on_dictionary(self) -> bool:
+        dict_match = REGEX_DICTIONARY.search(self.contents, pos=self.pointer)
+        return dict_match and dict_match.start() == self.pointer
