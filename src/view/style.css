@@ -1,0 +1,70 @@
+* {
+    border-radius: 2px;
+}
+
+.button {
+    background-color: #3d4450;
+    color: #fff;
+    border: none;
+    outline: none;
+    padding: 4px 16px;
+}
+
+.button:hover {
+    background-color: #464d58;
+}
+
+.main_button {
+    background: linear-gradient(90deg, #06BFFF 0%, #2D73FF 100%);
+}
+
+.main_button:hover {
+    background: #54a5d4;
+}
+
+.delete_button {
+    background-color: #C44848;
+}
+
+.delete_button:hover {
+    background-color: #C46565;
+}
+
+.main_window {
+    background-color: #181a21;
+}
+
+.app_title {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.app_subtitle {
+    font-weight: 400;
+    font-size: 14px;
+    opacity: 0.6;
+}
+
+.entry_title {
+    font-weight: 500;
+    font-size: 12px;
+    color: rgb(175, 175, 175);
+}
+
+.launch_menu {
+    padding: 0;
+    margin: 0;
+}
+
+.launch_entry_even {
+    background-color: #0e1014;
+}
+
+.launch_entry_odd {
+    background-color: #262d36;
+}
+
+.launch_entry_even,
+.launch_entry_odd {
+    padding: 18px;
+}

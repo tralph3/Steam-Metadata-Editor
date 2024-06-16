@@ -1,5 +1,5 @@
 # A Metadata Editor for Steam Applications
-# Copyright (C) 2023  Tomás Ralph
+# Copyright (C) 2024  Tomás Ralph
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,15 +13,19 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+from gi.repository import GObject
 
-from tkinter import filedialog, messagebox
+class App(GObject.Object):
+    name=GObject.Property(type=str, default="")
+    id=GObject.Property(type=int, default=-1)
+    installed=GObject.Property(type=bool, default=False)
+    type=GObject.Property(type=str, default="")
+    modified=GObject.Property(type=bool, default=False)
 
-
-def ask_steam_path():
-    messagebox.showinfo(
-        title="Can't locate Steam",
-        message="Steam couldn't be located in your system, "
-        + "or there's no \"appinfo.vdf\" file present. "
-        + "Please point to it's installation directory."
-    )
-    return filedialog.askdirectory()
+    def __init__(self, name: str, id: int, type: str, installed: bool, modified: bool) -> None:
+        super().__init__()
+        self.name = name
+        self.id = id
+        self.type = type
+        self.installed = installed
+        self.modified = modified

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #
 # A Metadata Editor for Steam Applications
-# Copyright (C) 2023  Tomás Ralph
+# Copyright (C) 2024  Tomás Ralph
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,24 +23,18 @@
 #                                #
 ##################################
 
-from tkinter import messagebox
+from models.appinfo import AppinfoFile
+from models.steam_libraries import SteamLibraries
+from view import View
+import sys
 
-from config import config
-from gui.main_window import MainWindow
-from appinfo import IncompatibleVDFError
-
+import json
 
 def main():
-    try:
-        main_window = MainWindow()
-        if not config.silent and config.export is None:
-            main_window.window.mainloop()
-    except IncompatibleVDFError as e:
-        messagebox.showerror(
-            title="Invalid VDF Version",
-            message=f"VDF version {e.vdf_version:#08x} is not supported.",
-        )
-
+    steam_libraries = SteamLibraries("/home/tralph3/.local/share/Steam/")
+    model = AppinfoFile("/home/tralph3/.local/share/Steam/appcache/appinfo.vdf", steam_libraries)
+    view = View(model, application_id="com.github.Metadata-Editor")
+    view.run(sys.argv)
 
 if __name__ == "__main__":
     main()
