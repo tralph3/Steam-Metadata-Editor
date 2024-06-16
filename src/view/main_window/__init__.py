@@ -111,7 +111,7 @@ class MainWindow(Gtk.ApplicationWindow):
             name = self.model.get_app_name(appid)
             if name == None: continue
             type = self.model.get_app_type(appid)
-            installed = False
+            installed = self.model.is_app_installed(appid)
             modified = False
             app_list.append(App(
                 name or "",

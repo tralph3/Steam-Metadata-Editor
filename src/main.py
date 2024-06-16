@@ -24,11 +24,15 @@
 ##################################
 
 from models.appinfo import AppinfoFile
+from models.steam_libraries import SteamLibraries
 from view import View
 import sys
 
+import json
+
 def main():
-    model = AppinfoFile("/home/tralph3/.local/share/Steam/appcache/appinfo.vdf")
+    steam_libraries = SteamLibraries("/home/tralph3/.local/share/Steam/")
+    model = AppinfoFile("/home/tralph3/.local/share/Steam/appcache/appinfo.vdf", steam_libraries)
     view = View(model, application_id="com.github.Metadata-Editor")
     view.run(sys.argv)
 
