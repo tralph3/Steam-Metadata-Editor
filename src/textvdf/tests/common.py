@@ -17,6 +17,7 @@ decoded_dict = {
             "apps": {
                 "42": "007"
             },
+            "empty_dict": {}
         },
     },
 }
