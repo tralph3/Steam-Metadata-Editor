@@ -58,11 +58,11 @@ class AppinfoFile:
         except KeyError:
             return None
 
-    def set_app_launch_menu(self, appid: int, launch_menu: dict) -> dict:
+    def set_app_launch_menu(self, appid: int, launch_menu: dict):
         self._appinfo["apps"][appid]["content"]["appinfo"].setdefault("config", {})
         self._appinfo["apps"][appid]["content"]["appinfo"]["config"]["launch"] = launch_menu
 
-    def get_app_launch_menu(self, appid: int) -> dict:
+    def get_app_launch_menu(self, appid: int) -> Optional[dict]:
         try:
             return self._appinfo["apps"][appid]["content"]["appinfo"]["config"]["launch"]
         except KeyError:
