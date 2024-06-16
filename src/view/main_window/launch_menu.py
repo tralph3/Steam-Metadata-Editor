@@ -4,9 +4,10 @@ from view.events import Event, event_connect, event_emit
 from .util import compose_entry_box, _make_box
 
 class LaunchEntry(Gtk.Box):
-    def __init__(self, entry: dict, appid: int, *args, **kwargs):
+    def __init__(self, model, entry: dict, appid: int, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.appid = appid
+        self._appid = appid
+        self._model = model
         self._entry = entry
         self._make_widgets()
         self._configure_widgets()
@@ -87,7 +88,7 @@ class LaunchEntry(Gtk.Box):
 class LaunchMenu(Gtk.Frame):
     def __init__(self, model, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.model = model
+        self._model = model
         self._current_app: App = None
         self._initial_app_launch_options = None
         self.set_vexpand(True)
@@ -145,7 +146,7 @@ class LaunchMenu(Gtk.Frame):
 
     def _make_entries(self):
         if not self._current_app: return
-        app_entries = self.model.get_app_launch_menu(self._current_app.id)
+        app_entries = self._model.get_app_launch_menu(self._current_app.id)
         self._initial_app_launch_options = app_entries or {}
         if not app_entries: return
         for i, entry in enumerate(app_entries):
@@ -156,7 +157,7 @@ class LaunchMenu(Gtk.Frame):
             self._entries_box.remove(entry)
 
     def _add_launch_entry(self, values: dict):
-        self._entries_box.append(LaunchEntry(values, self._current_app.id))
+        self._entries_box.append(LaunchEntry(self._model, values, self._current_app.id))
         self._recalculate_entry_css_classes()
         self._set_child_widget()
 
@@ -199,4 +200,4 @@ class LaunchMenu(Gtk.Frame):
         updated_entries = self._get_updated_entries()
         if self._initial_app_launch_options is not None \
            and self._initial_app_launch_options != updated_entries:
-            self.model.set_app_launch_menu(self._current_app.id, updated_entries)
+            self._model.set_app_launch_menu(self._current_app.id, updated_entries)
