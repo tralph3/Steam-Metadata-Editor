@@ -1,6 +1,7 @@
 import struct
+import textvdf
 from hashlib import sha1
-from .header import (HEADER_FORMAT,
+from .common import (HEADER_FORMAT,
                      HEADER_SIZE,
                      SEPARATOR,
                      TYPE_DICT,
@@ -11,6 +12,7 @@ from .header import (HEADER_FORMAT,
                      LAST_APPID,
                      COMPATIBLE_MAGIC_NUMBERS,
                      COMPATIBLE_UNIVERSES)
+
 
 class AppinfoEncoder:
     def __init__(self, obj: dict=None):
@@ -87,38 +89,10 @@ class AppinfoEncoder:
         app["header"]["checksum_binary"] = self._get_checksum_binary(encoded_content)
 
     def _get_checksum_text(self, app_contents: dict) -> bytes:
-        text_vdf = dict_to_vdf(app_contents)
-        hash = sha1(text_vdf)
+        text_vdf = textvdf.dumps(app_contents)
+        hash = sha1(text_vdf.encode())
         return hash.digest()
 
     def _get_checksum_binary(self, encoded_app: bytearray) -> bytes:
         hash = sha1(encoded_app)
         return hash.digest()
-
-
-def dict_to_vdf(vdf_dict: dict, indent=0) -> bytearray:
-    result = bytearray()
-    tabs = b"\t" * indent
-    for key in vdf_dict.keys():
-        if isinstance(vdf_dict[key], dict):
-            indent += 1
-            result += (tabs
-                + b'"'
-                + key.replace("\\", "\\\\").encode()
-                + b'"\n'
-                + tabs
-                + b"{\n"
-                + dict_to_vdf(vdf_dict[key], indent)
-                + tabs
-                + b"}\n")
-            indent -= 1
-        else:
-            result += (tabs
-                + b'"'
-                + key.replace("\\", "\\\\").encode()
-                + b'"'
-                + b"\t\t"
-                + b'"'
-                + str(vdf_dict[key]).replace("\\", "\\\\").encode()
-                + b'"\n')
-    return result

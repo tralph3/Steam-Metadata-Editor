@@ -1,5 +1,5 @@
 import struct
-from .header import (HEADER_FORMAT,
+from .common import (HEADER_FORMAT,
                      HEADER_SIZE,
                      INT_SEPARATOR,
                      INT_TYPE_DICT,

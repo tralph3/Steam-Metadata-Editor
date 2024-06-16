@@ -1,6 +1,7 @@
 from .decoder import TextVdfDecoder, TextVdfDecodeError
 from .encoder import TextVdfEncoder
 
+
 __version__ = '0.1'
 __all__ = [
     'dump', 'dumps', 'load', 'loads',
@@ -14,10 +15,10 @@ def dump(obj: dict, fp) -> None:
     fp.write(dumps(obj))
 
 def dumps(obj: dict) -> bytearray:
-    return AppinfoEncoder(obj).encode()
+    return TextVdfEncoder(obj).encode()
 
 def load(fp) -> dict:
-    return AppinfoDecoder(fp.read()).decode()
+    return TextVdfDecoder(fp.read()).decode()
 
 def loads(file_path: str) -> dict:
     with open(file_path, "rb") as f:

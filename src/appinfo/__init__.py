@@ -1,6 +1,7 @@
 from .decoder import AppinfoDecoder, AppinfoDecodeError
 from .encoder import AppinfoEncoder
 
+
 __version__ = '0.1'
 __all__ = [
     'dump', 'dumps', 'load', 'loads',

@@ -1,5 +1,6 @@
 import struct
 
+
 COMPATIBLE_MAGIC_NUMBERS = [ 0x07564428 ]
 COMPATIBLE_UNIVERSES     = [ 0x01 ]
 
