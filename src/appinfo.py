@@ -312,6 +312,8 @@ class Appinfo:
             self.appinfoData.extend(updated_header + encoded_subsections)
 
     def write_data(self):
+        if self.version == APPINFO_29:
+            self.update_string_offset_and_count()
         with open(self.vdf_path, "wb") as vdf:
             vdf.write(self.appinfoData)
 

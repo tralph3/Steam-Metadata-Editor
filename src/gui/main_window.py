@@ -485,7 +485,6 @@ class MainWindow:
         for appId in self.modifiedApps:
             self.appinfo.update_app(appId)
 
-        self.appinfo.update_string_offset_and_count()
         self.appinfo.write_data()
 
         if notice:
