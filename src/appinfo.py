@@ -59,7 +59,7 @@ class Appinfo:
             self.string_offset = self.read_int64()
             prev_offset = self.offset
             self.offset = self.string_offset
-            string_count = self.read_int32()
+            string_count = self.read_uint32()
             for i in range(string_count):
                 self.string_pool.append(self.read_string())
             self.offset = prev_offset
@@ -83,19 +83,20 @@ class Appinfo:
         return string
 
     def read_string_appinfo29(self):
-        index = self.read_int32()
-        try:
-            return self.string_pool[index]
-        except IndexError:
-            print(self.offset)
-
+        index = self.read_uint32()
+        return self.string_pool[index]
 
     def read_int64(self):
+        int64 = unpack("<q", self.appinfoData[self.offset:self.offset + 8])[0]
+        self.offset += 8
+        return int64
+
+    def read_uint64(self):
         int64 = unpack("<Q", self.appinfoData[self.offset:self.offset + 8])[0]
         self.offset += 8
         return int64
 
-    def read_int32(self):
+    def read_uint32(self):
         int32 = unpack("<I", self.appinfoData[self.offset:self.offset + 4])[0]
         self.offset += 4
         return int32
@@ -110,7 +111,7 @@ class Appinfo:
         value_parsers = {
             self.INT_TYPE_DICT: self.parse_subsections,
             self.INT_TYPE_STRING: self.read_string,
-            self.INT_TYPE_INT32: self.read_int32,
+            self.INT_TYPE_INT32: self.read_uint32,
         }
 
         while True:
@@ -163,7 +164,7 @@ class Appinfo:
         return header_data
 
     def verify_vdf_version(self):
-        self.version = self.read_int64()
+        self.version = self.read_uint64()
         if self.version not in self.COMPATIBLE_VERSIONS:
             raise IncompatibleVDFError(self.version)
 
@@ -189,6 +190,8 @@ class Appinfo:
             return not self.offset < len(self.appinfoData) - 4
         elif self.version == APPINFO_29:
             return not self.offset < self.string_offset - 4
+        else:
+            raise IncompatibleVDFError(self.version)
 
     def read_all_apps(self):
         apps = {}
@@ -219,30 +222,36 @@ class Appinfo:
         else:
             return string.encode() + self.SEPARATOR
 
-    def encode_int(self, integer):
+    def encode_uint32(self, integer):
         return pack("<I", integer)
+
+    def encode_int64(self, integer):
+        return pack("<q", integer)
+
+    def encode_key_appinfo29(self, key):
+        try:
+            index = self.string_pool.index(key)
+        except ValueError:
+            self.string_pool.append(key)
+            self.appinfoData += self.encode_string(key)
+        index = self.string_pool.index(key)
+        return self.encode_uint32(index)
 
     def encode_subsections(self, data):
         encoded_data = bytearray()
-
         for key, value in data.items():
+            key = self.encode_string(key) if self.version == APPINFO_28 else self.encode_key_appinfo29(key)
             if isinstance(value, dict):
                 encoded_data += (
-                    self.TYPE_DICT
-                    + self.encode_string(key)
-                    + self.encode_subsections(value)
+                    self.TYPE_DICT + key + self.encode_subsections(value)
                 )
             elif isinstance(value, str):
                 encoded_data += (
-                    self.TYPE_STRING
-                    + self.encode_string(key)
-                    + self.encode_string(value)
+                    self.TYPE_STRING + key + self.encode_string(value)
                 )
             elif isinstance(value, int):
                 encoded_data += (
-                    self.TYPE_INT32
-                    + self.encode_string(key)
-                    + self.encode_int(value)
+                    self.TYPE_INT32 + key + self.encode_uint32(value)
                 )
 
         # If it got to this point, this particular dictionary ended
@@ -266,6 +275,15 @@ class Appinfo:
         appinfo["size"] = size
 
         return appinfo
+
+    def update_string_offset_and_count(self):
+        string_count = len(self.string_pool)
+        encoded_string_count = self.encode_uint32(string_count)
+        last_app_start_index = self.appinfoData.rfind(b'\x08\x00\x00\x00\x00')
+        string_table_offset = last_app_start_index + 5
+        encoded_offset = self.encode_int64(string_table_offset)
+        self.appinfoData[8:16] = encoded_offset
+        self.appinfoData[string_table_offset:string_table_offset + 4] = encoded_string_count
 
     def update_app(self, app_id):
         appinfo = self.parsedAppInfo[app_id]
