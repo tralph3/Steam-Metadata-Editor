@@ -19,6 +19,10 @@ from hashlib import sha1
 from struct import pack, unpack
 
 
+APPINFO_29 = 0x107564429
+APPINFO_28 = 0x107564428
+
+
 class IncompatibleVDFError(Exception):
     def __init__(self, vdf_version):
         self.vdf_version = vdf_version
@@ -27,10 +31,13 @@ class IncompatibleVDFError(Exception):
 class Appinfo:
     def __init__(self, vdf_path, choose_apps=False, apps=None):
         self.offset = 0
+        self.string_pool = []
+        self.string_offset = 0
 
+        self.version = 0
         self.vdf_path = vdf_path
 
-        self.COMPATIBLE_VERSIONS = [0x107564428]
+        self.COMPATIBLE_VERSIONS = [APPINFO_29, APPINFO_28]
 
         self.SEPARATOR = b"\x00"
         self.TYPE_DICT = b"\x00"
@@ -48,6 +55,14 @@ class Appinfo:
             self.appinfoData = bytearray(vdf.read())
 
         self.verify_vdf_version()
+        if self.version == APPINFO_29:
+            self.string_offset = self.read_int64()
+            prev_offset = self.offset
+            self.offset = self.string_offset
+            string_count = self.read_int32()
+            for i in range(string_count):
+                self.string_pool.append(self.read_string())
+            self.offset = prev_offset
 
         # Load only the modified apps
         if choose_apps:
@@ -59,12 +74,21 @@ class Appinfo:
 
     def read_string(self):
         str_end = self.appinfoData.find(self.INT_SEPARATOR, self.offset)
+        string = self.appinfoData[self.offset:str_end]
         try:
-            string = self.appinfoData[self.offset:str_end].decode("utf-8")
+            string = string.decode("utf-8")
         except UnicodeDecodeError:
-            string = self.appinfoData[self.offset:str_end].decode("latin-1")
+            string = string.decode("latin-1")
         self.offset += str_end - self.offset + 1
         return string
+
+    def read_string_appinfo29(self):
+        index = self.read_int32()
+        try:
+            return self.string_pool[index]
+        except IndexError:
+            print(self.offset)
+
 
     def read_int64(self):
         int64 = unpack("<Q", self.appinfoData[self.offset:self.offset + 8])[0]
@@ -94,7 +118,10 @@ class Appinfo:
             if value_type == self.INT_SECTION_END:
                 break
 
-            key = self.read_string()
+            if self.version == APPINFO_29:
+                key = self.read_string_appinfo29()
+            else:
+                key = self.read_string()
             value = value_parsers[value_type]()
 
             subsection[key] = value
@@ -136,9 +163,9 @@ class Appinfo:
         return header_data
 
     def verify_vdf_version(self):
-        version = self.read_int64()
-        if version not in self.COMPATIBLE_VERSIONS:
-            raise IncompatibleVDFError(version)
+        self.version = self.read_int64()
+        if self.version not in self.COMPATIBLE_VERSIONS:
+            raise IncompatibleVDFError(self.version)
 
     def read_app(self, app_id):
         # All relevant apps will have a previous section ending before them
@@ -147,7 +174,6 @@ class Appinfo:
         byte_data = self.SECTION_END + pack("<I", app_id)
         self.offset = self.appinfoData.find(byte_data) + 1
         if self.offset == 0:
-            print(f"App {app_id} not found")
             os._exit(2)
         app = self.read_header()
         app["sections"] = self.parse_subsections()
@@ -155,12 +181,18 @@ class Appinfo:
         app["install_path"] = "."
         return app
 
+    def stop_reading(self):
+        if self.version == APPINFO_28:
+            # The last appid is 0 but there's no actual data for it,
+            # we skip it by checking 4 less bytes to not get into
+            # another loop that would raise exceptions
+            return not self.offset < len(self.appinfoData) - 4
+        elif self.version == APPINFO_29:
+            return not self.offset < self.string_offset - 4
+
     def read_all_apps(self):
         apps = {}
-        # The last appid is 0 but there's no actual data for it,
-        # we skip it by checking 4 less bytes to not get into
-        # another loop that would raise exceptions
-        while self.offset < len(self.appinfoData) - 4:
+        while not self.stop_reading():
             app = self.read_header()
             app["sections"] = self.parse_subsections()
             app["installed"] = False
